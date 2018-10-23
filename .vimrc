@@ -14,7 +14,7 @@ set autoindent
 " use intelligent indentation for C
 set smartindent
 " configure tabwidth and insert spaces instead of tabs
-set tabstop=4        " tab width is 4 spaces
+set tabstop=4        " tab width is 4 spaces        
 set shiftwidth=4     " indent also with 4 spaces
 set expandtab        " expand tabs to spaces
 set smarttab
@@ -41,4 +41,13 @@ set hlsearch
 set incsearch 
 set showmatch 
 set mat=2
+set showcmd
+set background=dark
+if has("autocmd")
+    au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+    
+endif
 
+if has("autocmd")
+    filetype plugin indent on
+endif
