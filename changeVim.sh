@@ -5,3 +5,5 @@ echo  "Remplacement de ~/.vimrc"
 
 cp .vimrc ~/.vimrc
 
+echo "Copie des plugins"
+cp .vim ~/ -r
