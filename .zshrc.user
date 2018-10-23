@@ -1,0 +1,18 @@
+#  to change colors :
+
+PS1=$'%{\e[1;31m%}%n%{\e[0;35m%}@%{\e[0;31m%}%m %{\e[0;33m%}%T %{\e[1;32m%}%~ %{\e[0m%}>%{\e[0m%} '
+#see : http://loiclefloch.fr/822-les-couleurs-dans-un-shell/
+
+### alaises
+
+
+### alaises
+
+
+### alaises
+
+alias ls='ls --color'
+
+
+
+
