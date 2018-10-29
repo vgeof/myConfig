@@ -1,6 +1,16 @@
-#  to change colors :
+precmd () { vcs_info }
+# Prompt which indicates VCS info in Zsh
+autoload -Uz vcs_info
+zstyle ':vcs_info:*' actionformats \
+    '%F{5}(%f%s%F{5})%F{3}-%F{5}[%F{2}%b%F{3}|%F{1}%a%F{5}]%f '
+zstyle ':vcs_info:*' formats       \
+    '%b'
+zstyle ':vcs_info:(sv[nk]|bzr):*' branchformat '%b%F{1}:%F{3}%r'
 
-PS1=$'%{\e[1;31m%}%n%{\e[0;35m%}@%{\e[0;31m%}%m %{\e[0;33m%}%T %{\e[1;32m%}%~ %{\e[0m%}>%{\e[0m%} '
+zstyle ':vcs_info:*' enable git cvs svn hg
+
+setopt prompt_subst
+PS1=$'%{\e[1;31m%}%n%{\e[0;35m%}@%{\e[0;31m%}%m %{\e[0;33m%}%T %{\e[1;32m%}%~ %{\e[0;36m%}(\$vcs_info_msg_0_) %{\e[0m%}>%{\e[0m%} '
 #see : http://loiclefloch.fr/822-les-couleurs-dans-un-shell/
 
 ### alaises
