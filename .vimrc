@@ -4,15 +4,25 @@
 "
 
 call plug#begin('~/.vim/plugged')
+Plug 'ludovicchabant/vim-gutentags'
+Plug 'Shougo/vimproc.vim', { 'do': 'make' }
 Plug 'scrooloose/nerdtree'
-Plug 'Valloric/YouCompleteMe',  { 'do': './install.py --clang-completer --clangd-completer --ts-completer' }
+Plug 'ervandew/supertab'
 ""Plug 'itchyny/lightline.vim'
 Plug 'vim-airline/vim-airline'
 Plug 'ap/vim-buftabline'
 Plug 'editorconfig/editorconfig-vim'
-Plug 'leafgarland/typescript-vim'
-""Plug 'quramy/tsuquyomi'
+"Plug 'leafgarland/typescript-vim'
+"Plug 'quramy/tsuquyomi'
+Plug 'HerringtonDarkholme/yats.vim'
+"Plug 'mhartington/nvim-typescript', {'do': './install.sh'}
+" For async completion
+"Plug 'Shougo/deoplete.nvim'
+Plug 'Valloric/YouCompleteMe',  { 'do': './install.py --clang-completer --clangd-completer --ts-completer' }
+"Plug 'autozimu/LanguageClient-neovim', {  'branch': 'next',  'do': 'bash install.sh'  }
 Plug 'Quramy/vim-js-pretty-template'
+Plug 'SirVer/ultisnips'
+Plug 'honza/vim-snippets'
 Plug 'morhetz/gruvbox'
 ""Plug 'jiangmiao/auto-pairs'
 "Plug 'vim-syntastic/syntastic'
@@ -31,21 +41,23 @@ Plug 'octol/vim-cpp-enhanced-highlight'
 Plug 'tomasiser/vim-code-dark'
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'christoomey/vim-tmux-navigator'
-Plug 'tpope/vim-fugitive'
 "Plug 'phleet/vim-mercenary'
+Plug 'tpope/vim-fugitive'
 Plug 'ludovicchabant/vim-lawrencium'
 "Plug 'kien/rainbow_parentheses.vim'
 Plug 'junegunn/rainbow_parentheses.vim'
 Plug 'vim-scripts/a.vim'
-Plug 'vim-scripts/OmniCppComplete'
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
 Plug 'junegunn/fzf.vim'
+"Plug 'vim-scripts/OmniCppComplete'
+Plug 'Chiel92/vim-autoformat'
 call plug#end()
 
 
 
 
 " set UTF-8 encoding
+let g:gutentags_ctags_extra_args=["--c++-kinds=+p --fields=+iaS --extra=+q"]
 set enc=utf-8
 set fenc=utf-8
 set termencoding=utf-8
@@ -57,7 +69,7 @@ set autoindent
 set smartindent
 set hidden
 " configure tabwidth and insert spaces instead of tabs
-set tabstop=4        " tab width is 4 spaces        
+set tabstop=4        " tab width is 4 spaces
 set shiftwidth=4     " indent also with 4 spaces
 set expandtab        " expand tabs to spaces
 set smarttab
@@ -81,8 +93,8 @@ set whichwrap+=<,>,h,l
 set ignorecase
 set smartcase
 set hlsearch
-set incsearch 
-set showmatch 
+set incsearch
+set showmatch
 set mat=2
 set showcmd
 set background=dark
@@ -90,6 +102,20 @@ set wildmenu
 set wildignorecase
 set diffopt+=vertical
 set cul
+set foldmethod=syntax
+set foldnestmax=10
+set nofoldenable
+set foldlevel=2
+set ttyfast
+
+let isremote = system("df -P -T $PWD | grep fuse ")
+if !empty(isremote)
+    let g:airline#extensions#disable_rtp_load = 1
+    let g:airline_extensions = []
+endif
+command! -bang -nargs=* Find call fzf#vim#grep('rg --column --line-number --no-heading --fixed-strings --ignore-case --hidden --follow --glob "!.git/*" --no-messages --color "always" '.shellescape(<q-args>), 1, <bang>0)
+
+command Occ :execute 'Find ' .expand('<cword>')
 "set cscopetag
 
 
@@ -98,6 +124,13 @@ if has('nvim')
     set termguicolors
     let g:gruvbox_italic=1
 endif
+
+
+"let g:LanguageClient_serverCommands = {
+"  \ 'cpp': ['clangd'],
+"  \ }
+"nnoremap <silent> K :call LanguageClient#textDocument_hover()<CR>
+"nnoremap <silent> gd :call LanguageClient#textDocument_definition()<CR>
 
 
 
@@ -112,14 +145,19 @@ nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
 nnoremap <C-l> <C-w>l
 nnoremap <silent> <c-p> :Files<CR>
-nmap <C-\>s :cs find s <C-R>=expand("<cword>")<CR><CR>	
-nmap <C-\>g :cs find g <C-R>=expand("<cword>")<CR><CR>	
-nmap <C-\>c :cs find c <C-R>=expand("<cword>")<CR><CR>	
-nmap <C-\>t :cs find t <C-R>=expand("<cword>")<CR><CR>	
-nmap <C-\>e :cs find e <C-R>=expand("<cword>")<CR><CR>	
-nmap <C-\>f :cs find f <C-R>=expand("<cfile>")<CR><CR>	
+nmap <C-\>s :cs find s <C-R>=expand("<cword>")<CR><CR>
+nmap <C-\>g :cs find g <C-R>=expand("<cword>")<CR><CR>
+nmap <C-\>c :cs find c <C-R>=expand("<cword>")<CR><CR>
+nmap <C-\>t :cs find t <C-R>=expand("<cword>")<CR><CR>
+nmap <C-\>e :cs find e <C-R>=expand("<cword>")<CR><CR>
+nmap <C-\>f :cs find f <C-R>=expand("<cfile>")<CR><CR>
 nmap <C-\>i :cs find i ^<C-R>=expand("<cfile>")<CR>$<CR>
-nmap <C-\>d :cs find d <C-R>=expand("<cword>")<CR><CR>	<Paste>
+nmap <C-\>d :cs find d <C-R>=expand("<cword>")<CR><CR>  <Paste>
+nmap <F2> :Occ<CR>
+nmap <F3> :Find<CR>
+nmap <F5> :NERDTreeFind<CR>
+nmap <F6> :NERDTreeToggle<CR>
+nnoremap Y :YcmCompleter<Space>
 
 
 
@@ -132,7 +170,6 @@ if has("autocmd")
 endif
 
 " NERDTree config
-nmap <F6> :NERDTreeToggle<CR>
 autocmd StdinReadPre * let s:std_in=1
 autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
@@ -157,9 +194,16 @@ au BufRead,BufNewFile *.ts   setfiletype typescript
 
 " js-pretty-template settings
 autocmd FileType typescript JsPreTmpl
-autocmd FileType typescript syn clear foldBraces " For leafgarland/typescript-vim users only. Please see #1 for details.
+"autocmd FileType typescript syn clear foldBraces " For leafgarland/typescript-vim users only. Please see #1 for details.
 
 
+
+" tsuquyomi settings
+" let g:tsuquyomi_use_vimproc = 1
+"
+" nvim-typescript
+let g:nvim_typescript#default_mappings = 1
+let g:nvim_typescript#diagnostics_enable = 0 " I use YCM to show diagnostics
 
 " lightline settings
 ""set laststatus=2
@@ -181,7 +225,7 @@ hi Normal guibg=NONE ctermbg=NONE
 ""let g:prettier#quickfix_enabled = 0
 """"
 ""let g:prettier#autoformat = 0
-""autocmd BufWritePre,TextChanged,InsertLeave *.js,*.jsx,*.mjs,*.ts,*.tsx,*.css,*.less,*.scss,*.json,*.graphql,*.md,*.vue,*.yaml,*.html PrettierAsync
+"""autocmd BufWritePre,TextChanged,InsertLeave *.js,*.jsx,*.mjs,*.ts,*.tsx,*.css,*.less,*.scss,*.json,*.graphql,*.md,*.vue,*.yaml,*.html PrettierAsync
 ""let g:prettier#config#parser = 'babylon'
 
 
@@ -190,6 +234,7 @@ hi Normal guibg=NONE ctermbg=NONE
 let g:ale_linters = {'python':['pylint'],'typescript':['tslint'] , 'cpp':['cppcheck']}
 let g:ale_fixers = {'python':['autopep8'],'html':['prettier'], 'scss': ['prettier'] , 'typescript': ['prettier'],'json': ['prettier']}
 let g:ale_fix_on_save = 1
+highlight link ALEErrorSign ALEWarningSign
 
 
 
@@ -238,7 +283,24 @@ let g:airline_powerline_fonts = 1
 "settings for ycm
 let g:ycm_autoclose_preview_window_after_insertion = 1
 let g:ycm_use_clangd = 1
-let g:ycm_server_log_level = 'debug'
+"let g:ycm_clangd_uses_ycmd_caching = 0
+let g:ycm_clangd_binary_path = exepath("clangd")
+"let g:ycm_use_clangd_args=
+"let g:ycm_server_log_level = 'debug'
+let g:ycm_key_list_select_completion = ['<C-n>', '<Down>']
+let g:ycm_key_list_previous_completion = ['<C-p>', '<Up>']
+let g:SuperTabDefaultCompletionType = '<C-n>'
+let g:ycm_enable_diagnostic_signs = 1
+if has("autocmd")
+    filetype on
+    autocmd FileType typescript nnoremap <C-]> :YcmCompleter GoTo<CR>
+endif
+
+"settings for ultisnips
+let g:UltiSnipsExpandTrigger = "<tab>"
+let g:UltiSnipsJumpForwardTrigger = "<tab>"
+let g:UltiSnipsJumpBackwardTrigger = "<s-tab>"
+
 
 "settings for gitgutter"
 "let g:gitgutter_terminal_reports_focus=0
@@ -251,13 +313,14 @@ let g:slime_python_ipython = 1
 
 "settings for rainbow
 au VimEnter * RainbowParentheses
+let g:rainbow#pairs = [['(', ')'], ['[', ']'],['{','}']]
 
 "settings for signify
 let g:signify_vcs_list = [ 'git', 'hg' ]
 
 
 "settings for ctrlp
-"set wildignore+=*node_modules/*,*.so,*.swp,*.zip  
+"set wildignore+=*node_modules/*,*.so,*.swp,*.zip
 
 
 "settings to keep session
@@ -284,15 +347,22 @@ let g:signify_vcs_list = [ 'git', 'hg' ]
 "au VimLeave * :call MakeSession()
 
 function! LoadCscope()
-  let db = findfile("cscope.out", ".;")
-  if (!empty(db))
-    let path = strpart(db, 0, match(db, "/cscope.out$"))
-    set nocscopeverbose " suppress 'duplicate connection' error
-    exe "cs add " . db . " " . path
-    set cscopeverbose
-  " else add the database pointed to by environment variable 
-  elseif $CSCOPE_DB != "" 
-    cs add $CSCOPE_DB
-  endif
+    let db = findfile("cscope.out", ".;")
+    if (!empty(db))
+        let path = strpart(db, 0, match(db, "/cscope.out$"))
+        set nocscopeverbose " suppress 'duplicate connection' error
+        exe "cs add " . db . " " . path
+        set cscopeverbose
+        " else add the database pointed to by environment variable
+    elseif $CSCOPE_DB != ""
+        cs add $CSCOPE_DB
+    endif
 endfunction
 au BufEnter /* call LoadCscope()
+
+" autoformat settings
+if !empty(isremote)
+let g:formatdef_amadeus_format =  '"astyle -A10 --indent=spaces=4 --indent-classes --indent-cases --indent-switches --convert-tabs --indent-col1-comments --add-brackets --max-instatement-indent=120 --min-conditional-indent=0 --pad-oper --pad-comma --pad-header --unpad-paren --align-pointer=type --align-reference=type --preserve-date -n  --lineend=linux --formatted"'
+    let g:formatters_cpp = ['amadeus_format']
+    au BufWrite *.cpp,*.hpp :Autoformat
+endif
