@@ -1,14 +1,11 @@
-" VIM Configuration File
-" Description: Optimized for C/C++ development, but useful also for other things.
-" Author: Gerhard Gappmeier
-"
+if &shell =~# 'fish$'
+	    set shell=sh
+endif
 
 call plug#begin('~/.vim/plugged')
-"Plug 'ludovicchabant/vim-gutentags'
 Plug 'Shougo/vimproc.vim', { 'do': 'make' }
 Plug 'scrooloose/nerdtree'
 "Plug 'ervandew/supertab'
-""Plug 'itchyny/lightline.vim'
 Plug 'vim-airline/vim-airline'
 Plug 'ap/vim-buftabline'
 Plug 'editorconfig/editorconfig-vim'
@@ -18,58 +15,46 @@ Plug 'HerringtonDarkholme/yats.vim'
 "Plug 'neoclide/coc.nvim', {'tag': '*', 'branch': 'release'}
 "Plug 'mhartington/nvim-typescript', {'do': './install.sh'}
 " For async completion
-"Plug 'Shougo/deoplete.nvim'
-"Plug 'Valloric/YouCompleteMe',  { 'do': './install.py --clang-completer --clangd-completer --ts-completer' }
-"Plug 'autozimu/LanguageClient-neovim', {  'branch': 'next',  'do': 'bash install.sh'  }
 Plug 'Quramy/vim-js-pretty-template'
 Plug 'SirVer/ultisnips'
 Plug 'honza/vim-snippets'
 Plug 'morhetz/gruvbox'
 Plug 'jiangmiao/auto-pairs'
-"Plug 'vim-syntastic/syntastic'
 Plug 'dracula/vim', { 'as': 'dracula' }
 Plug 'altercation/vim-colors-solarized'
 ""Plug 'prettier/vim-prettier', { 'do': 'npm install' }
-";Plug 'airblade/vim-gitgutter'
+"Plug 'airblade/vim-gitgutter'
 Plug 'mhinz/vim-signify'
 Plug 'Xuyuanp/nerdtree-git-plugin'
 Plug 'w0rp/ale'
 Plug 'jpalardy/vim-slime'
 ""Plug 'Maximbaz/lightline-ale'
 ""Plug 'kien/ctrlp.vim'
-"Plug 'octol/vim-cpp-enhanced-highlight'
 Plug 'tomasiser/vim-code-dark'
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'christoomey/vim-tmux-navigator'
-"Plug 'phleet/vim-mercenary'
 Plug 'tpope/vim-fugitive'
-"Plug 'ludovicchabant/vim-lawrencium'
 "Plug 'kien/rainbow_parentheses.vim'
 "Plug 'junegunn/rainbow_parentheses.vim'
 Plug 'luochen1990/rainbow'
 Plug 'vim-scripts/a.vim'
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
 Plug 'junegunn/fzf.vim'
-"Plug 'vim-scripts/OmniCppComplete'
 "Plug 'Chiel92/vim-autoformat'
 Plug 'majutsushi/tagbar'
-"Plug 'ncm2/float-preview.nvim'
 Plug 'embear/vim-localvimrc'
 Plug 'vim-scripts/DoxygenToolkit.vim'
 Plug 'm-pilia/vim-ccls'
 Plug 'AndrewRadev/linediff.vim'
-"Plug 'arakashic/chromatica.nvim'
 Plug 'ap/vim-css-color'
 Plug 'lervag/vimtex'
 Plug 'neovim/nvim-lspconfig'
 Plug 'nvim-lua/completion-nvim'
-Plug 'nvim-treesitter/nvim-treesitter'
+Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 Plug 'nvim-treesitter/nvim-treesitter-textobjects'
+Plug 'dag/vim-fish'
 "Plug 'steelsojka/completion-buffers'
 call plug#end()
-
-"let g:chromatica#libclang_path='/usr/lib/llvm-9/lib/libclang.so'
-"let g:chromatica#enable_at_startup=1
 
 
 " set UTF-8 encoding
@@ -475,10 +460,11 @@ let g:ccls_orientation = 'horizontal'
 
 
 lua <<EOF
-require'nvim_lsp'.ccls.setup{
+require'lspconfig'.ccls.setup{
+root_dir = require'lspconfig'.util.root_pattern("compile_commands.json", ".ccls");
   init_options = {
             cache = {
-                directory = "/home/vgeoffroy/ccls-cache";
+                directory = "/home/vgeoffroy/.ccls-cache";
             };
     };
   capabilities = {
@@ -491,9 +477,9 @@ require'nvim_lsp'.ccls.setup{
     }
   },
 }
-require'nvim_lsp'.tsserver.setup{}
-require'nvim_lsp'.pyls.setup{}
-require'nvim_lsp'.bashls.setup{}
+require'lspconfig'.tsserver.setup{}
+require'lspconfig'.pyls.setup{}
+require'lspconfig'.bashls.setup{}
 require "nvim-treesitter.parsers".get_parser_configs().markdown = nil
 require'nvim-treesitter.configs'.setup {
   ensure_installed = "all",    
