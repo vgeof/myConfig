@@ -480,9 +480,8 @@ root_dir = require'lspconfig'.util.root_pattern("compile_commands.json", ".ccls"
 require'lspconfig'.tsserver.setup{}
 require'lspconfig'.pyls.setup{}
 require'lspconfig'.bashls.setup{}
-require "nvim-treesitter.parsers".get_parser_configs().markdown = nil
 require'nvim-treesitter.configs'.setup {
-  ensure_installed = "all",    
+  ensure_installed = "maintained",    
   highlight = {
     enable = true
     },
@@ -520,6 +519,8 @@ nnoremap <silent> gr    <cmd>lua vim.lsp.buf.references()<CR>
 nnoremap <silent> g0    <cmd>lua vim.lsp.buf.document_symbol()<CR>
 nnoremap <silent> gW    <cmd>lua vim.lsp.buf.workspace_symbol()<CR>
 nnoremap <silent> gd    <cmd>lua vim.lsp.buf.declaration()<CR>
+nnoremap <silent> <F4>    <cmd>lua vim.lsp.buf.incoming_calls()<CR>
+nnoremap <silent> <F7>    <cmd>lua vim.lsp.buf.outgoing_calls()<CR>
 
 
 let g:completion_trigger_keyword_length = 1
