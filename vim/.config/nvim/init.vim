@@ -2,36 +2,32 @@ if &shell =~# 'fish$'
 	    set shell=sh
 endif
 
-call plug#begin('~/.vim/plugged')
+call plug#begin()
 Plug 'Shougo/vimproc.vim', { 'do': 'make' }
 Plug 'scrooloose/nerdtree'
 "Plug 'ervandew/supertab'
 Plug 'vim-airline/vim-airline'
-Plug 'ap/vim-buftabline'
 Plug 'editorconfig/editorconfig-vim'
 "Plug 'leafgarland/typescript-vim'
 "Plug 'quramy/tsuquyomi'
 Plug 'HerringtonDarkholme/yats.vim'
-"Plug 'neoclide/coc.nvim', {'tag': '*', 'branch': 'release'}
 "Plug 'mhartington/nvim-typescript', {'do': './install.sh'}
-" For async completion
 Plug 'Quramy/vim-js-pretty-template'
+Plug 'junegunn/vim-peekaboo'
 Plug 'SirVer/ultisnips'
 Plug 'honza/vim-snippets'
-Plug 'morhetz/gruvbox'
+Plug 'gruvbox-community/gruvbox'
 Plug 'jiangmiao/auto-pairs'
 Plug 'dracula/vim', { 'as': 'dracula' }
 Plug 'altercation/vim-colors-solarized'
 ""Plug 'prettier/vim-prettier', { 'do': 'npm install' }
-"Plug 'airblade/vim-gitgutter'
 Plug 'mhinz/vim-signify'
 Plug 'Xuyuanp/nerdtree-git-plugin'
 Plug 'w0rp/ale'
 Plug 'jpalardy/vim-slime'
 ""Plug 'Maximbaz/lightline-ale'
-""Plug 'kien/ctrlp.vim'
 Plug 'tomasiser/vim-code-dark'
-Plug 'nathanaelkane/vim-indent-guides'
+Plug 'lukas-reineke/indent-blankline.nvim' ,{ 'branch': 'lua' }
 Plug 'christoomey/vim-tmux-navigator'
 Plug 'tpope/vim-fugitive'
 "Plug 'kien/rainbow_parentheses.vim'
@@ -40,7 +36,6 @@ Plug 'luochen1990/rainbow'
 Plug 'vim-scripts/a.vim'
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
 Plug 'junegunn/fzf.vim'
-"Plug 'Chiel92/vim-autoformat'
 Plug 'majutsushi/tagbar'
 Plug 'embear/vim-localvimrc'
 Plug 'vim-scripts/DoxygenToolkit.vim'
@@ -53,6 +48,11 @@ Plug 'nvim-lua/completion-nvim'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 Plug 'nvim-treesitter/nvim-treesitter-textobjects'
 Plug 'dag/vim-fish'
+Plug 'romgrk/nvim-treesitter-context'
+Plug 'kassio/neoterm'
+Plug 'justinmk/vim-sneak'
+Plug 'easymotion/vim-easymotion'
+Plug 'liuchengxu/vista.vim'
 "Plug 'steelsojka/completion-buffers'
 call plug#end()
 
@@ -106,17 +106,29 @@ set foldlevel=2
 set ttimeoutlen=10
 set updatetime=300
 set cmdheight=1
+"mouse support
+set mouse=a
+set conceallevel=2
+"specific nvim"
+set termguicolors
+" to avoid ESC delay with lightline
+set ttimeoutlen=0
 
 
-let g:airline#extensions#disable_rtp_load = 1
-let g:airline_extensions = []
+""Airline"
+"let g:airline#extensions#disable_rtp_load = 1
+"let g:airline_extensions = []
+"let g:airline#extensions#tabline#enabled = 1
+let g:airline#extensions#tabline#enabled = 1
+let g:airline#extensions#tabline#formatter = 'unique_tail_improved'
 
 let isremote = system("df -P -T $PWD | grep fuse ")
 if !empty(isremote)
     let g:airline#extensions#disable_rtp_load = 1
     let g:airline_extensions = []
 endif
-" fzf options  
+
+" fzf options
 let g:fzf_preview_window = 'right:40%'
 command! -bang -nargs=* Find call fzf#vim#grep('rg --column --line-number --no-heading --fixed-strings --ignore-case --hidden --follow --glob "!.git/*" --glob "!.clangd/*" --glob "!.hg/* " --glob "!.tags "--no-messages --color "always" '.shellescape(<q-args>), 1, <bang>0)
 
@@ -132,7 +144,6 @@ let g:fzf_action = {
   \ 'ctrl-v': 'vsplit' }
 
 command Occ :execute 'Find ' .expand('<cword>')
-"set cscopetag
 
 function! RipgrepFzf(query, fullscreen)
   let command_fmt = 'rg --column --line-number --no-heading --color=always --smart-case %s || true'
@@ -144,26 +155,8 @@ endfunction
 
 command! -nargs=* -bang RG call RipgrepFzf(<q-args>, <bang>0)
 
-command! Send :execute "!" '~/Code/BE/updateServer.sh'
 let g:fzf_layout = { 'window': { 'width': 0.99, 'height': 0.7 } }
 
-"specific nvim"
-if has('nvim')
-    set termguicolors
-    let g:gruvbox_italic=1
-endif
-
-
-"let g:LanguageClient_serverCommands = {
-"  \ 'cpp': ['clangd'],
-"  \ }
-"nnoremap <silent> K :call LanguageClient#textDocument_hover()<CR>
-"nnoremap <silent> gd :call LanguageClient#textDocument_definition()<CR>
-
-
-
-" to avoid ESC delay with lightline
-set ttimeoutlen=0
 
 
 " key mappings
@@ -178,13 +171,11 @@ nmap <F2> :Occ<CR>
 nmap <F3> :RG<CR>
 nmap <F5> :NERDTreeFind<CR>
 nmap <F6> :NERDTreeToggle<CR>
-nmap <F10> :CocList diagnostics<CR>
-nmap <F12> :w<CR>:Send<CR>
 nmap <leader>b :Buffers<CR>
-nnoremap Y :YcmCompleter<Space>
 
 
 
+"restoring last cursor position
 if has("autocmd")
     au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
 endif
@@ -205,25 +196,13 @@ let g:plug_window = 'noautocmd vertical topleft new'
 au BufRead,BufNewFile *.ts   setfiletype typescript
 au BufRead,BufNewFile *.amalog   setfiletype amalog
 au BufRead,BufNewFile *.amalog   :RainbowToggleOff
-" Syntastic Config
-"set statusline+=%#warningmsg#
-"set statusline+=%{SyntasticStatuslineFlag()}
-"set statusline+=%*
-"let g:syntastic_always_populate_loc_list = 1
-"let g:syntastic_auto_loc_list = 1
-"let g:syntastic_check_on_open = 1
-"let g:syntastic_check_on_wq = 0
-"let g:tsuquyomi_disable_quickfix = 1
-"let g:syntastic_typescript_checkers = ['tsuquyomi']
-
 
 " typescript-vim config
-
 
 " js-pretty-template settings
 autocmd FileType typescript JsPreTmpl
 "autocmd FileType typescript syn clear foldBraces " For leafgarland/typescript-vim users only. Please see #1 for details.
-au BufRead,BufNewFile *.web,*.web.log,*.play,*.play.log,*.edi,*.edi.log set filetype=play
+au BufRead,BufNewFile *.web,*.web.log,*.play,*.play.log,*.edi,*.edi.log,*.gsv,*.gsv.log set filetype=play
 
 
 " tsuquyomi settings
@@ -236,15 +215,6 @@ let g:nvim_typescript#diagnostics_enable = 0 " I use YCM to show diagnostics
 " lightline settings
 ""set laststatus=2
 set noshowmode
-
-"theme settings
-let g:gruvbox_contrast_dark = 'medium'
-"let g:solarized_termcolors=256
-colorscheme gruvbox
-hi Normal guibg=NONE ctermbg=NONE
-
-
-""colorscheme solarized
 
 
 "Prettier settings"
@@ -263,92 +233,37 @@ let g:ale_linters = {'python':['pylint'],'typescript':['tslint'] ,'cpp':[]}
 "", 'cpp':['cppcheck']
 let g:ale_fixers = {
             \'html':['tslint'],
-            \'scss': ['tslint'] , 
+            \'scss': ['tslint'] ,
             \'typescript': ['tslint'],
             \'json': ['prettier'],
             \'sh': ['shfmt'],
             \'javascript': ['tslint'],
             \'xml': ['xmllint'],
-            \'python':['autopep8']}
+            \'python':['autopep8'],
+            \'*':['trim_whitespace']}
 "let g:ale_fix_on_save = 1
 highlight link ALEErrorSign ALEWarningSign
 nmap FF <Plug>(ale_fix)
 
 
 
-"Settings for lightline-ale"
-""let g:lightline = {}
-""
-""let g:lightline.component_expand = {
-""      \  'linter_checking': 'lightline#ale#checking',
-""      \  'linter_warnings': 'lightline#ale#warnings',
-""      \  'linter_errors': 'lightline#ale#errors',
-""      \  'linter_ok': 'lightline#ale#ok',
-""      \ }
-""let g:lightline.component_type = {
-""      \     'linter_checking': 'left',
-""      \     'linter_warnings': 'warning',
-""      \     'linter_errors': 'error',
-""      \     'linter_ok': 'left',
-""      \ }
-""let g:lightline.active = { 'right': [[ 'linter_checking', 'linter_errors', 'linter_warnings', 'linter_ok' ]] }
-""
-""
-""
-" settings for ctrlp"
-"let g:ctrlp_map = '<c-p>'
-"let g:ctrlp_cmd = 'CtrlP'
-
-
-
-" Settings fpr cpp-enhanced"
-"let g:cpp_class_scope_highlight = 1
-"let g:cpp_member_variable_highlight = 1
-"let g:cpp_class_decl_highlight = 1
-
-" Settings for indentguides"
-hi IndentGuidesOdd  ctermbg=black
-hi IndentGuidesEven ctermbg=darkgrey
-let g:indent_guides_start_level = 2
-let g:indent_guides_guide_size = 1
-let g:indent_guides_enable_on_vim_startup = 1
+" Settings for indentblankline"
+let g:indent_blankline_char_list = ['|', '¦', '┆', '┊']
+let g:indent_blankline_char_highlight = 'NonText'
+let g:indent_blankline_buftype_exclude = ['terminal']
+"let g:indent_blankline_show_first_indent_level = v:false
 
 
 " Settings for airline"
 let g:airline_powerline_fonts = 1
-let g:airline_highlighting_cache = 1
+"let g:airline_highlighting_cache = 1
 
 
-"settings for ycm
-"let g:ycm_auto_trigger = 1
-"let g:ycm_use_clangd = 1
-"let g:ycm_clangd_uses_ycmd_caching = 0
-"let g:ycm_disable_signature_help = 0
-""let g:ycm_collect_identifiers_from_tags_files = 1
-""let g:ycm_add_preview_to_completeopt = 0
-"let g:ycm_autoclose_preview_window_after_completion = 1
-""let g:ycm_max_diagnostics_to_display = 0
-"let g:ycm_clangd_binary_path = exepath("clangd")
-""let g:ycm_server_log_level = 'debug'
-"let g:ycm_key_list_select_completion = ['<C-n>', '<Down>']
-"let g:ycm_key_list_previous_completion = ['<C-p>', '<Up>']
-"let g:SuperTabDefaultCompletionType = '<C-n>'
-"let g:ycm_enable_diagnostic_signs = 1
-""set completeopt-=preview 
-"let g:ycm_max_num_candidates = 20
-"let g:ycm_max_num_identifier_candidates = 10
-"let g:ycm_min_num_of_chars_for_completion = 2
-"let g:ycm_clangd_args = ['--limit-results=30','--header-insertion=never']
-"if has("autocmd")
-"    autocmd FileType typescript,cpp,hpp nnoremap <C-]> :YcmCompleter GoTo<CR>
-"endif
 
 "settings for ultisnips
 let g:UltiSnipsExpandTrigger = "<Enter>"
 let g:UltiSnipsJumpForwardTrigger = "<Enter>"
 let g:UltiSnipsJumpBackwardTrigger = "<s-Enter>"
-
-
 
 "settings for gitgutter"
 "let g:gitgutter_terminal_reports_focus=0
@@ -368,79 +283,16 @@ let g:rainbow_active =1
 let g:signify_vcs_list = [ 'git', 'hg' ]
 
 
-"settings for ctrlp
-"set wildignore+=*node_modules/*,*.so,*.swp,*.zip
 
 
-"settings to keep session
-"function! MakeSession()
-"  let b:sessiondir = $HOME . "/.vim/sessions" . getcwd()
-"  if (filewritable(b:sessiondir) != 2)
-"    exe 'silent !mkdir -p ' b:sessiondir
-"    redraw!
-"  endif
-"  let b:filename = b:sessiondir . '/session.vim'
-"  exe "mksession! " . b:filename
-"endfunction
-"
-"function! LoadSession()
-"  let b:sessiondir = $HOME . "/.vim/sessions" . getcwd()
-"  let b:sessionfile = b:sessiondir . "/session.vim"
-"  if (filereadable(b:sessionfile))
-"    exe 'source ' b:sessionfile
-"  else
-"    echo "No session loaded."
-"  endif
-"endfunction
-"au VimEnter * nested :call LoadSession()
-"au VimLeave * :call MakeSession()
-
-"function! LoadCscope()
-"    let db = findfile("cscope.out", ".;")
-"    if (!empty(db))
-"        let path = strpart(db, 0, match(db, "/cscope.out$"))
-"        set nocscopeverbose " suppress 'duplicate connection' error
-"        exe "cs add " . db . " " . path
-"        set cscopeverbose
-"        " else add the database pointed to by environment variable
-"    elseif $CSCOPE_DB != ""
-"        cs add $CSCOPE_DB
-"    endif
-"endfunction
-"au BufEnter /* call LoadCscope()
-
-" autoformat settings
-"let g:formatdef_amadeus_format =  '"astyle -A10 --indent=spaces=4 --indent-classes --indent-cases --indent-switches --convert-tabs --indent-col1-comments --add-brackets --max-instatement-indent=120 --min-conditional-indent=0 --pad-oper --pad-comma --pad-header --unpad-paren --align-pointer=type --align-reference=type --preserve-date -n  --lineend=linux --formatted"'
-"    let g:formatters_cpp = ['amadeus_format']
-"    au BufWrite *.cpp,*.hpp :Autoformat
-"
-
-"tagbar 
-nmap <F8> :TagbarToggle<CR>
+"tagbar
+nmap <F8> :Vista!!<CR>
+nmap <F9> :lua vim.lsp.stop_client(vim.lsp.get_active_clients())<CR>:e<CR>
 
 
-"coc 
-"nmap <silent> gd <Plug>(coc-definition)
-"nmap <silent> gy <Plug>(coc-type-definition)
-"nmap <silent> gi <Plug>(coc-implementation)
-"nmap <silent> gr <Plug>(coc-references)
-"nnoremap <silent> K :call <SID>show_documentation()<CR>
-
-"function! s:show_documentation()
-"  if (index(['vim','help'], &filetype) >= 0)
-"    execute 'h '.expand('<cword>')
-"  else
-"    call CocAction('doHover')
-"  endif
-"endfunction
-"
-"" Remap for rename current word
-"nmap <leader>rn <Plug>(coc-rename)
-
-
-
-" float-preview
-"let g:float_preview#docked = 1
+"vista options
+"let g:vista#renderer#enable_icon = 1
+let g:vista_sidebar_position="rightbelow vert"
 
 " clang format options
 
@@ -451,37 +303,17 @@ endfunction
 autocmd BufWritePre *.h,*.cc,*.cpp,*.hpp,*.c,*.cxx,*.hxx call Formatonsave()
 
 "vim ccls
-let g:ccls_size = 20
-let g:ccls_position = 'botright'
-let g:ccls_orientation = 'horizontal'
+"let g:ccls_size = 20
+"let g:ccls_position = 'botright'
+"let g:ccls_orientation = 'horizontal'
 
 " vimtex
  let g:tex_flavor = 'latex'
 
 
 lua <<EOF
-require'lspconfig'.ccls.setup{
-root_dir = require'lspconfig'.util.root_pattern("compile_commands.json", ".ccls");
-  init_options = {
-            cache = {
-                directory = "/home/vgeoffroy/.ccls-cache";
-            };
-    };
-  capabilities = {
-    textDocument = {
-      completion = {
-        completionItem = {
-          snippetSupport = false
-        }
-      }
-    }
-  },
-}
-require'lspconfig'.tsserver.setup{}
-require'lspconfig'.pyls.setup{}
-require'lspconfig'.bashls.setup{}
 require'nvim-treesitter.configs'.setup {
-  ensure_installed = "maintained",    
+  ensure_installed = "maintained",
   highlight = {
     enable = true
     },
@@ -505,33 +337,89 @@ require'nvim-treesitter.configs'.setup {
         ["ic"] = "@class.inner",
       },
     },
-  }  
+  }
  }
+
+ local nvim_lsp = require('lspconfig')
+ local on_attach = function(client, bufnr)
+  local function buf_set_keymap(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
+  local function buf_set_option(...) vim.api.nvim_buf_set_option(bufnr, ...) end
+
+  local opts = { noremap=true, silent=true }
+  buf_set_keymap('n', 'gd', '<Cmd>lua vim.lsp.buf.declaration()<CR>', opts)
+  buf_set_keymap('n', '<C-]>', '<Cmd>lua vim.lsp.buf.definition()<CR>', opts)
+  buf_set_keymap('n', 'K', '<Cmd>lua vim.lsp.buf.hover()<CR>', opts)
+  buf_set_keymap('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<CR>', opts)
+  buf_set_keymap('n', '<C-k>', '<cmd>lua vim.lsp.buf.signature_help()<CR>', opts)
+  buf_set_keymap('n', '<space>D', '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
+  buf_set_keymap('n', '<space>rn', '<cmd>lua vim.lsp.buf.rename()<CR>', opts)
+  buf_set_keymap('n', 'gr', '<cmd>lua vim.lsp.buf.references()<CR>', opts)
+  buf_set_keymap('n', '<space>e', '<cmd>lua vim.lsp.diagnostic.show_line_diagnostics()<CR>', opts)
+  buf_set_keymap('n', '[d', '<cmd>lua vim.lsp.diagnostic.goto_prev()<CR>', opts)
+  buf_set_keymap('n', ']d', '<cmd>lua vim.lsp.diagnostic.goto_next()<CR>', opts)
+  buf_set_keymap('n', '<F10>', '<cmd>lua vim.lsp.diagnostic.set_loclist()<CR>', opts)
+  buf_set_keymap('n', '<F4>', '<cmd>lua vim.lsp.buf.incoming_calls()<CR>', opts)
+  buf_set_keymap('n', '<F7>', '<cmd>lua vim.lsp.buf.outgoing_calls()<CR>', opts)
+
+
+  if client.resolved_capabilities.document_highlight then
+    vim.api.nvim_exec([[
+      hi LspReferenceRead cterm=bold ctermbg=black
+      hi LspReferenceText  cterm=bold ctermbg=black
+      hi LspReferenceWrite cterm=bold ctermbg=black
+      augroup lsp_document_highlight
+        autocmd! * <buffer>
+        autocmd CursorHold <buffer> lua vim.lsp.buf.document_highlight()
+        autocmd CursorMoved <buffer> lua vim.lsp.buf.clear_references()
+      augroup END
+    ]], false)
+  end
+end
+
+--require'lspconfig'.ccls.setup{
+--on_attach=on_attach;
+--root_dir = require'lspconfig'.util.root_pattern("compile_commands.json", ".ccls");
+--  init_options = {
+--            cache = {
+--                directory = "/home/vgeoffroy/.ccls-cache";
+--            };
+--    };
+--  capabilities = {
+--    textDocument = {
+--      completion = {
+--        completionItem = {
+--          snippetSupport = false
+--        }
+--      }
+--    }
+--  },
+--}
+require'lspconfig'.clangd.setup{on_attach=on_attach;
+ cmd = { "/home/vgeoffroy/Code/clangd_snapshot_20210124/bin/clangd", "--background-index" ,"--clang-tidy"};
+  init_options = {
+            cache = {
+                directory = "/home/vgeoffroy/.clangd-cache";
+            };
+    };
+ }
+require'lspconfig'.tsserver.setup{on_attach=on_attach}
+require'lspconfig'.pyls.setup{on_attach=on_attach}
+require'lspconfig'.bashls.setup{on_attach=on_attach}
 EOF
 
 
-nnoremap <silent> <c-]> <cmd>lua vim.lsp.buf.definition()<CR>
-nnoremap <silent> K     <cmd>lua vim.lsp.buf.hover()<CR>
-nnoremap <silent> gD    <cmd>lua vim.lsp.buf.implementation()<CR>
-nnoremap <silent> <c-k> <cmd>lua vim.lsp.buf.signature_help()<CR>
-nnoremap <silent> 1gD   <cmd>lua vim.lsp.buf.type_definition()<CR>
-nnoremap <silent> gr    <cmd>lua vim.lsp.buf.references()<CR>
-nnoremap <silent> g0    <cmd>lua vim.lsp.buf.document_symbol()<CR>
-nnoremap <silent> gW    <cmd>lua vim.lsp.buf.workspace_symbol()<CR>
-nnoremap <silent> gd    <cmd>lua vim.lsp.buf.declaration()<CR>
-nnoremap <silent> <F4>    <cmd>lua vim.lsp.buf.incoming_calls()<CR>
-nnoremap <silent> <F7>    <cmd>lua vim.lsp.buf.outgoing_calls()<CR>
-
-
 let g:completion_trigger_keyword_length = 1
-let g:completion_matching_ignore_case = 1
+let g:completion_matching_smart_case = 1
 let g:completion_matching_strategy_list = ['exact', 'substring',]
 let g:completion_chain_complete_list = [
     \{'complete_items': ['lsp', 'snippet']},
+    \{'complete_items': ['path']},
     \{'mode': '<c-p>'},
     \{'mode': '<c-n>'}
 \]
+let g:completion_sorting = "none"
 
+let g:completion_trigger_on_delete = 1
 let g:completion_auto_change_source = 1
 
 
@@ -541,9 +429,57 @@ inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
 
 " Set completeopt to have a better completion experience
-set completeopt=menuone,noinsert,noselect
+set completeopt=menuone,noselect,noinsert
 "
 "" Avoid showing message extra message when using completion
 let g:completion_enable_snippet = 'UltiSnips'
 set shortmess+=c
 autocmd BufEnter * lua require'completion'.on_attach()
+
+
+" fix to Alt+Enter
+nnoremap <silent> <M-CR> <cmd>lua vim.lsp.buf.code_action()<CR>
+
+"peekabo
+let g:peekaboo_window='rightbelow vert 35new'
+
+
+"terminal options
+"tnoremap <Esc> <C-\><C-n>
+tnoremap <A-h> <C-\><C-N><C-w>h
+tnoremap <A-j> <C-\><C-N><C-w>j
+tnoremap <A-k> <C-\><C-N><C-w>k
+tnoremap <A-l> <C-\><C-N><C-w>l
+"inoremap <A-h> <C-\><C-N><C-w>hi
+"inoremap <A-j> <C-\><C-N><C-w>ji
+"inoremap <A-k> <C-\><C-N><C-w>ki
+"inoremap <A-l> <C-\><C-N><C-w>li
+nnoremap <A-h> <C-w>h
+nnoremap <A-j> <C-w>j
+nnoremap <A-k> <C-w>k
+nnoremap <A-l> <C-w>l
+autocmd TermOpen * setlocal nonumber norelativenumber
+nnoremap <A-\|> :Tnew<CR>
+nnoremap <A--> :belowright Tnew<CR><C-\><C-N>:resize 20<CR>i
+tnoremap <A--> <C-\><C-N>:belowright Tnew<CR><C-\><C-N>:resize 20<CR>i
+autocmd BufWinEnter,WinEnter term://* startinsert
+"startinsert
+
+"Neoterm
+let g:neoterm_autoinsert = 1
+let g:neoterm_default_mod='rightbelow vert'
+let g:neoterm_size = 95
+let g:neoterm_fixedsize = 1
+let g:neoterm_auto_repl_cmd=0
+let g:neoterm_autoscroll=1
+let g:neoterm_shell="fish"
+
+
+
+"theme settings
+let g:gruvbox_italic=1
+let g:gruvbox_contrast_dark = 'medium'
+"let g:solarized_termcolors=256
+let g:gruvbox_vert_split="bg2"
+colorscheme gruvbox
+hi Normal guibg=NONE ctermbg=NONE
