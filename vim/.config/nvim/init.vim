@@ -5,7 +5,6 @@ endif
 call plug#begin()
 Plug 'Shougo/vimproc.vim', { 'do': 'make' }
 Plug 'scrooloose/nerdtree'
-"Plug 'ervandew/supertab'
 Plug 'vim-airline/vim-airline'
 Plug 'editorconfig/editorconfig-vim'
 "Plug 'leafgarland/typescript-vim'
@@ -21,15 +20,18 @@ Plug 'jiangmiao/auto-pairs'
 Plug 'dracula/vim', { 'as': 'dracula' }
 Plug 'altercation/vim-colors-solarized'
 ""Plug 'prettier/vim-prettier', { 'do': 'npm install' }
-Plug 'mhinz/vim-signify'
+"Plug 'mhinz/vim-signify'
 Plug 'Xuyuanp/nerdtree-git-plugin'
 Plug 'w0rp/ale'
 Plug 'jpalardy/vim-slime'
 ""Plug 'Maximbaz/lightline-ale'
 Plug 'tomasiser/vim-code-dark'
-Plug 'lukas-reineke/indent-blankline.nvim' ,{ 'branch': 'lua' }
+Plug 'lukas-reineke/indent-blankline.nvim'
 Plug 'christoomey/vim-tmux-navigator'
 Plug 'tpope/vim-fugitive'
+" NOTE : les 2 plugins suivants vont ensemble
+Plug 'nvim-lua/plenary.nvim'
+Plug 'lewis6991/gitsigns.nvim'
 "Plug 'kien/rainbow_parentheses.vim'
 "Plug 'junegunn/rainbow_parentheses.vim'
 Plug 'luochen1990/rainbow'
@@ -44,16 +46,20 @@ Plug 'AndrewRadev/linediff.vim'
 Plug 'ap/vim-css-color'
 Plug 'lervag/vimtex'
 Plug 'neovim/nvim-lspconfig'
-Plug 'nvim-lua/completion-nvim'
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 Plug 'nvim-treesitter/nvim-treesitter-textobjects'
 Plug 'dag/vim-fish'
-Plug 'romgrk/nvim-treesitter-context'
+"Plug 'romgrk/nvim-treesitter-context'
 Plug 'kassio/neoterm'
 Plug 'justinmk/vim-sneak'
 Plug 'easymotion/vim-easymotion'
 Plug 'liuchengxu/vista.vim'
-"Plug 'steelsojka/completion-buffers'
+Plug 'hrsh7th/nvim-compe'
+Plug 'glepnir/lspsaga.nvim'
+Plug 'nvim-lua/popup.nvim'
+Plug 'nvim-lua/plenary.nvim'
+"Plug 'nvim-telescope/telescope.nvim'
+Plug 'windwp/nvim-spectre'
 call plug#end()
 
 
@@ -95,7 +101,11 @@ set hlsearch
 set incsearch
 set showcmd
 set background=dark
-set wildmenu
+"better tab completion in command mode
+set wildmode=longest:full,full
+" left and right do not select match in command mode
+cnoremap <Left> <Space><BS><Left>
+cnoremap <Right> <Space><BS><Right>
 set wildignorecase
 set diffopt+=vertical
 set cul
@@ -113,14 +123,18 @@ set conceallevel=2
 set termguicolors
 " to avoid ESC delay with lightline
 set ttimeoutlen=0
+" sign column always visible
+set scl=yes
 
+" open quickfix windo below vertical split
+au FileType qf wincmd J
 
 ""Airline"
 "let g:airline#extensions#disable_rtp_load = 1
 "let g:airline_extensions = []
 "let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#tabline#enabled = 1
-let g:airline#extensions#tabline#formatter = 'unique_tail_improved'
+let g:airline#extensions#tabline#formatter = 'unique_tail'
 
 let isremote = system("df -P -T $PWD | grep fuse ")
 if !empty(isremote)
@@ -156,6 +170,9 @@ endfunction
 command! -nargs=* -bang RG call RipgrepFzf(<q-args>, <bang>0)
 
 let g:fzf_layout = { 'window': { 'width': 0.99, 'height': 0.7 } }
+nnoremap <C-p> <cmd>Files<cr>
+nnoremap <F2> <cmd>Occ<cr>
+nnoremap <F3> <cmd>RG<cr>
 
 
 
@@ -167,8 +184,6 @@ nnoremap <C-k> <C-w>k
 nnoremap <C-l> <C-w>l
 nnoremap <silent> <c-p> :Files<CR>
 nmap <F1> :BLines<CR>
-nmap <F2> :Occ<CR>
-nmap <F3> :RG<CR>
 nmap <F5> :NERDTreeFind<CR>
 nmap <F6> :NERDTreeToggle<CR>
 nmap <leader>b :Buffers<CR>
@@ -236,6 +251,7 @@ let g:ale_fixers = {
             \'scss': ['tslint'] ,
             \'typescript': ['tslint'],
             \'json': ['prettier'],
+            \'rust': ['rustfmt'],
             \'sh': ['shfmt'],
             \'javascript': ['tslint'],
             \'xml': ['xmllint'],
@@ -261,8 +277,8 @@ let g:airline_powerline_fonts = 1
 
 
 "settings for ultisnips
-let g:UltiSnipsExpandTrigger = "<Enter>"
-let g:UltiSnipsJumpForwardTrigger = "<Enter>"
+let g:UltiSnipsExpandTrigger = "<A-Enter>"
+let g:UltiSnipsJumpForwardTrigger = "<A-Enter>"
 let g:UltiSnipsJumpBackwardTrigger = "<s-Enter>"
 
 "settings for gitgutter"
@@ -312,6 +328,15 @@ autocmd BufWritePre *.h,*.cc,*.cpp,*.hpp,*.c,*.cxx,*.hxx call Formatonsave()
 
 
 lua <<EOF
+require('gitsigns').setup{
+signs = {
+    add          = {hl = 'GitSignsAdd'   , text = '│', numhl='GitSignsAddNr'   , linehl='GitSignsAddLn'},
+    change       = {hl = 'GitSignsChange', text = '│', numhl='GitSignsChangeNr', linehl='GitSignsChangeLn'},
+    delete       = {hl = 'GitSignsDelete', text = '_', numhl='GitSignsDeleteNr', linehl='GitSignsDeleteLn'},
+    topdelete    = {hl = 'GitSignsDelete', text = '‾', numhl='GitSignsDeleteNr', linehl='GitSignsDeleteLn'},
+    changedelete = {hl = 'GitSignsChange', text = '~', numhl='GitSignsChangeNr', linehl='GitSignsChangeLn'},
+  }}
+
 require'nvim-treesitter.configs'.setup {
   ensure_installed = "maintained",
   highlight = {
@@ -348,15 +373,8 @@ require'nvim-treesitter.configs'.setup {
   local opts = { noremap=true, silent=true }
   buf_set_keymap('n', 'gd', '<Cmd>lua vim.lsp.buf.declaration()<CR>', opts)
   buf_set_keymap('n', '<C-]>', '<Cmd>lua vim.lsp.buf.definition()<CR>', opts)
-  buf_set_keymap('n', 'K', '<Cmd>lua vim.lsp.buf.hover()<CR>', opts)
   buf_set_keymap('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<CR>', opts)
-  buf_set_keymap('n', '<C-k>', '<cmd>lua vim.lsp.buf.signature_help()<CR>', opts)
   buf_set_keymap('n', '<space>D', '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
-  buf_set_keymap('n', '<space>rn', '<cmd>lua vim.lsp.buf.rename()<CR>', opts)
-  buf_set_keymap('n', 'gr', '<cmd>lua vim.lsp.buf.references()<CR>', opts)
-  buf_set_keymap('n', '<space>e', '<cmd>lua vim.lsp.diagnostic.show_line_diagnostics()<CR>', opts)
-  buf_set_keymap('n', '[d', '<cmd>lua vim.lsp.diagnostic.goto_prev()<CR>', opts)
-  buf_set_keymap('n', ']d', '<cmd>lua vim.lsp.diagnostic.goto_next()<CR>', opts)
   buf_set_keymap('n', '<F10>', '<cmd>lua vim.lsp.diagnostic.set_loclist()<CR>', opts)
   buf_set_keymap('n', '<F4>', '<cmd>lua vim.lsp.buf.incoming_calls()<CR>', opts)
   buf_set_keymap('n', '<F7>', '<cmd>lua vim.lsp.buf.outgoing_calls()<CR>', opts)
@@ -394,51 +412,171 @@ end
 --    }
 --  },
 --}
-require'lspconfig'.clangd.setup{on_attach=on_attach;
- cmd = { "/home/vgeoffroy/Code/clangd_snapshot_20210124/bin/clangd", "--background-index" ,"--clang-tidy"};
-  init_options = {
-            cache = {
-                directory = "/home/vgeoffroy/.clangd-cache";
-            };
-    };
- }
-require'lspconfig'.tsserver.setup{on_attach=on_attach}
-require'lspconfig'.pyls.setup{on_attach=on_attach}
+
+
+
+local capabilities = vim.lsp.protocol.make_client_capabilities()
+capabilities.textDocument.completion.completionItem.snippetSupport = false
+
+require'lspconfig'.clangd.setup{on_attach=on_attach ;cmd = { "/home/vgeoffroy/Code/clangd/bin/clangd","--clang-tidy" ,"--background-index", "--suggest-missing-includes",  "--completion-style=detailed" }, capabilities = capabilities}
+
+require'lspconfig'.pylsp.setup{on_attach=on_attach}
 require'lspconfig'.bashls.setup{on_attach=on_attach}
+require'lspconfig'.tsserver.setup{on_attach=on_attach}
+require'lspconfig'.rust_analyzer.setup{
+    on_attach=on_attach,
+    settings = {
+        ["rust-analyzer"] = {
+            assist = {
+                importGranularity = "module",
+                importPrefix = "by_self",
+            },
+            cargo = {
+                loadOutDirsFromCheck = true
+            },
+            procMacro = {
+                enable = true
+            },
+        }
+    }
+}
+
+require'compe'.setup {
+  enabled = true;
+  autocomplete = true;
+  debug = false;
+  min_length = 1;
+  preselect = 'enable';
+  throttle_time = 80;
+  source_timeout = 200;
+  incomplete_delay = 400;
+  max_abbr_width = 100;
+  max_kind_width = 100;
+  max_menu_width = 100;
+  documentation = true;
+
+  source = {
+    path = true;
+    nvim_lsp = true;
+  };
+}
+local t = function(str)
+  return vim.api.nvim_replace_termcodes(str, true, true, true)
+end
+
+local check_back_space = function()
+    local col = vim.fn.col('.') - 1
+    if col == 0 or vim.fn.getline('.'):sub(col, col):match('%s') then
+        return true
+    else
+        return false
+    end
+end
+
+-- Use (s-)tab to:
+--- move to prev/next item in completion menuone
+_G.tab_complete = function()
+  if vim.fn.pumvisible() == 1 then
+    return t "<C-n>"
+  elseif vim.fn.call("UltiSnips#CanExpandSnippet",{}) == 1 then
+    return vim.fn['UltiSnips#ExpandSnippet']()
+  elseif check_back_space() then
+    return t "<Tab>"
+  else
+    return vim.fn['compe#complete']()
+  end
+end
+_G.s_tab_complete = function()
+  if vim.fn.pumvisible() == 1 then
+    return t "<C-p>"
+  else
+    return t "<S-Tab>"
+  end
+end
+
+vim.api.nvim_set_keymap("i", "<Tab>", "v:lua.tab_complete()", {expr = true})
+vim.api.nvim_set_keymap("s", "<Tab>", "v:lua.tab_complete()", {expr = true})
+vim.api.nvim_set_keymap("i", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true})
+vim.api.nvim_set_keymap("s", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true})
+
+
+local saga = require 'lspsaga'
+saga.init_lsp_saga()
+
+
+--local actions = require('telescope.actions')
+---- Global remapping
+--------------------------------
+--require('telescope').setup{
+--  defaults = {
+--    scroll_strategy = nil,
+--    mappings = {
+--      i = {
+--        -- Otherwise, just set the mapping to the function that you want it to be.
+--        ["<C-j>"] = actions.move_selection_next,
+--        ["<C-k>"] = actions.move_selection_previous,
+--
+--      },
+--      n = {
+--        ["<C-j>"] = actions.move_selection_next,
+--        ["<C-k>"] = actions.move_selection_previous,
+--      },
+--    },
+--  }
+--}
+
 EOF
 
-
-let g:completion_trigger_keyword_length = 1
-let g:completion_matching_smart_case = 1
-let g:completion_matching_strategy_list = ['exact', 'substring',]
-let g:completion_chain_complete_list = [
-    \{'complete_items': ['lsp', 'snippet']},
-    \{'complete_items': ['path']},
-    \{'mode': '<c-p>'},
-    \{'mode': '<c-n>'}
-\]
-let g:completion_sorting = "none"
-
-let g:completion_trigger_on_delete = 1
-let g:completion_auto_change_source = 1
+"nnoremap <C-p> <cmd>lua require('telescope.builtin').find_files()<cr>
+"nnoremap <F3> <cmd>lua require('telescope.builtin').live_grep()<cr>
+"nnoremap <F2> <cmd>lua require('telescope.builtin').grep_string()<cr>
+"nnoremap <leader>b <cmd>lua require('telescope.builtin').buffers()<cr>
 
 
+nnoremap <silent> <M-CR> <cmd>lua require('lspsaga.codeaction').code_action()<CR>
+vnoremap <silent> <M-CR> :<C-U>lua require('lspsaga.codeaction').range_code_action()<CR>
+nnoremap <silent> K <cmd>lua require('lspsaga.hover').render_hover_doc()<CR>
+nnoremap <silent> gs <cmd>lua require('lspsaga.signaturehelp').signature_help()<CR>
+nnoremap <silent><space>rn <cmd>lua require('lspsaga.rename').rename()<CR>
+nnoremap <silent><leader>cd <cmd>lua require'lspsaga.diagnostic'.show_line_diagnostics()<CR>
+nnoremap <silent><leader>cc <cmd>lua require'lspsaga.diagnostic'.show_cursor_diagnostics()<CR>
+nnoremap <silent> [d <cmd>lua require'lspsaga.diagnostic'.lsp_jump_diagnostic_prev()<CR>
+nnoremap <silent> ]d <cmd>lua require'lspsaga.diagnostic'.lsp_jump_diagnostic_next()<CR>
+nnoremap <silent> gr <cmd>lua require'lspsaga.provider'.lsp_finder()<CR>
 
-" Use <Tab> and <S-Tab> to navigate through popup menu
-inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
-inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+
+
+inoremap <silent><expr> <CR>      compe#confirm('<CR>')
+inoremap <silent><expr> <C-e>     compe#close('<C-e>')
 
 " Set completeopt to have a better completion experience
-set completeopt=menuone,noselect,noinsert
-"
-"" Avoid showing message extra message when using completion
-let g:completion_enable_snippet = 'UltiSnips'
+set completeopt=menuone,noselect
+
+let g:compe = {}
+let g:compe.enabled = v:true
+let g:compe.autocomplete = v:true
+let g:compe.debug = v:false
+let g:compe.min_length = 1
+let g:compe.preselect = 'enable'
+let g:compe.throttle_time = 80
+let g:compe.source_timeout = 200
+let g:compe.incomplete_delay = 400
+let g:compe.max_abbr_width = 100
+let g:compe.max_kind_width = 100
+let g:compe.max_menu_width = 100
+let g:compe.documentation = v:true
+
+let g:compe.source = {}
+let g:compe.source.path = v:true
+let g:compe.source.buffer = v:true
+let g:compe.source.calc = v:true
+let g:compe.source.nvim_lsp = v:true
+let g:compe.source.nvim_lua = v:true
+let g:compe.source.ultisnips = v:true
+let g:compe.source.vsnips = v:false
+"inoremap <silent><expr> <CR>      compe#confirm('<CR>')
+"inoremap <silent><expr> <C-e>     compe#close('<C-e>')
 set shortmess+=c
-autocmd BufEnter * lua require'completion'.on_attach()
-
-
-" fix to Alt+Enter
-nnoremap <silent> <M-CR> <cmd>lua vim.lsp.buf.code_action()<CR>
 
 "peekabo
 let g:peekaboo_window='rightbelow vert 35new'
@@ -462,7 +600,7 @@ autocmd TermOpen * setlocal nonumber norelativenumber
 nnoremap <A-\|> :Tnew<CR>
 nnoremap <A--> :belowright Tnew<CR><C-\><C-N>:resize 20<CR>i
 tnoremap <A--> <C-\><C-N>:belowright Tnew<CR><C-\><C-N>:resize 20<CR>i
-autocmd BufWinEnter,WinEnter term://* startinsert
+"autocmd BufWinEnter,WinEnter term://* startinsert
 "startinsert
 
 "Neoterm
@@ -473,6 +611,7 @@ let g:neoterm_fixedsize = 1
 let g:neoterm_auto_repl_cmd=0
 let g:neoterm_autoscroll=1
 let g:neoterm_shell="fish"
+let g:neoterm_repl_enable_ipython_paste_magic=1
 
 
 
@@ -483,3 +622,16 @@ let g:gruvbox_contrast_dark = 'medium'
 let g:gruvbox_vert_split="bg2"
 colorscheme gruvbox
 hi Normal guibg=NONE ctermbg=NONE
+
+"easymotion
+let g:EasyMotion_smartcase = 1
+"nvim signs
+highlight link GitSignsAdd GruvboxGreen
+highlight link GitSignsChange GruvboxOrange
+highlight link GitSignsDelete GruvboxRed
+
+nnoremap <leader>h :ClangdSwitchSourceHeader<CR>
+
+
+" spectre
+nnoremap <leader>S :lua require('spectre').open()<CR>
