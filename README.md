@@ -7,6 +7,6 @@ stow tmux -t ~
 
 # Telecharger vim -plug
 # :Plugupdate via nvim
-# installer police iosevka (AUR)
+# installer police ttf-iosevka-nerd
 # installer ripgrep bat
 

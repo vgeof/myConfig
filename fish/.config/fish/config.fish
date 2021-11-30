@@ -114,7 +114,9 @@ alias vimdiff='nvim -d'
 alias ll='exa -l'
 alias la='exa -la'
 
-set EDITOR 'nvim'
+set -x EDITOR 'nvim'
+set -x VISUAL 'nvim'
+set -x SUDO_EDITOR 'nvim'
 
 
 ###############################################
@@ -123,3 +125,4 @@ set EDITOR 'nvim'
 if test -f ~/.config/fish/config_specific.fish
     source ~/.config/fish/config_specific.fish
 end
+

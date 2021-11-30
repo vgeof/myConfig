@@ -19,7 +19,6 @@ Plug 'gruvbox-community/gruvbox'
 Plug 'jiangmiao/auto-pairs'
 Plug 'dracula/vim', { 'as': 'dracula' }
 Plug 'altercation/vim-colors-solarized'
-""Plug 'prettier/vim-prettier', { 'do': 'npm install' }
 "Plug 'mhinz/vim-signify'
 Plug 'Xuyuanp/nerdtree-git-plugin'
 Plug 'w0rp/ale'
@@ -60,9 +59,13 @@ Plug 'nvim-lua/popup.nvim'
 Plug 'nvim-lua/plenary.nvim'
 "Plug 'nvim-telescope/telescope.nvim'
 Plug 'windwp/nvim-spectre'
+Plug 'puremourning/vimspector'
+"Plug 'steelsojka/completion-buffers'
+Plug 'sakhnik/nvim-gdb', { 'do': ':!./install.sh' }
 call plug#end()
 
 
+" """""""""""""""" nvim default"
 " set UTF-8 encoding
 "let g:gutentags_ctags_extra_args=["--c++-kinds=+p --fields=+iaS --extra=+q"]
 set enc=utf-8
@@ -72,50 +75,50 @@ set nocompatible
 " use indentation of previous line
 set autoindent
 " use intelligent indentation for C
-set smartindent
-set hidden
-" configure tabwidth and insert spaces instead of tabs
-set tabstop=4        " tab width is 4 spaces
-set shiftwidth=4     " indent also with 4 spaces
-set expandtab        " expand tabs to spaces
 set smarttab
 set wrap
-" wrap lines at 300 chars. 80 is somewaht antiquated with nowadays displays.
-set textwidth=300
 " turn syntax highlighting on
 set t_Co=256
 syntax on
 " colorscheme wombat256
+set autoread
+set backspace=eol,start,indent
+set hlsearch
+set incsearch
+set showcmd
+set background=dark
+set foldmethod=syntax
+set foldnestmax=10
+set nofoldenable
+set foldlevel=2
+set cmdheight=1
+
+
+""""""" non nvim default"
+set smartindent
+set hidden
+set tabstop=4        " tab width is 4 spaces
+" configure tabwidth and insert spaces instead of tabs
+set shiftwidth=4     " indent also with 4 spaces
+set expandtab        " expand tabs to spaces
 " turn line numbers on
 set number
 set relativenumber
 " highlight matching braces
 set showmatch
-set autoread
+" number of line to keep when scrolling
 set so=15
-set backspace=eol,start,indent
 set whichwrap+=<,>,h,l
 set ignorecase
 set smartcase
-set hlsearch
-set incsearch
-set showcmd
-set background=dark
 "better tab completion in command mode
 set wildmode=longest:full,full
-" left and right do not select match in command mode
-cnoremap <Left> <Space><BS><Left>
-cnoremap <Right> <Space><BS><Right>
 set wildignorecase
 set diffopt+=vertical
+" highlight current line
 set cul
-set foldmethod=syntax
-set foldnestmax=10
-set nofoldenable
-set foldlevel=2
 set ttimeoutlen=10
 set updatetime=300
-set cmdheight=1
 "mouse support
 set mouse=a
 set conceallevel=2
@@ -125,6 +128,10 @@ set termguicolors
 set ttimeoutlen=0
 " sign column always visible
 set scl=yes
+
+" left and right do not select match in command mode
+cnoremap <Left> <Space><BS><Left>
+cnoremap <Right> <Space><BS><Right>
 
 " open quickfix windo below vertical split
 au FileType qf wincmd J
@@ -314,7 +321,7 @@ let g:vista_sidebar_position="rightbelow vert"
 
 function! Formatonsave()
   let l:lines="all"
-  pyf ~/.vim/clang-format.py
+  py3f /usr/share/clang/clang-format.py
 endfunction
 autocmd BufWritePre *.h,*.cc,*.cpp,*.hpp,*.c,*.cxx,*.hxx call Formatonsave()
 
@@ -378,6 +385,8 @@ require'nvim-treesitter.configs'.setup {
   buf_set_keymap('n', '<F10>', '<cmd>lua vim.lsp.diagnostic.set_loclist()<CR>', opts)
   buf_set_keymap('n', '<F4>', '<cmd>lua vim.lsp.buf.incoming_calls()<CR>', opts)
   buf_set_keymap('n', '<F7>', '<cmd>lua vim.lsp.buf.outgoing_calls()<CR>', opts)
+    buf_set_keymap('n', '<space>f', '<cmd>lua vim.lsp.buf.formatting()<CR>', opts)
+
 
 
   if client.resolved_capabilities.document_highlight then
@@ -418,7 +427,7 @@ end
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities.textDocument.completion.completionItem.snippetSupport = false
 
-require'lspconfig'.clangd.setup{on_attach=on_attach ;cmd = { "/home/vgeoffroy/Code/clangd/bin/clangd","--clang-tidy" ,"--background-index", "--suggest-missing-includes",  "--completion-style=detailed" }, capabilities = capabilities}
+require'lspconfig'.clangd.setup{on_attach=on_attach ;cmd = { "clangd","--clang-tidy" ,"--background-index", "--suggest-missing-includes",  "--completion-style=detailed" }, capabilities = capabilities}
 
 require'lspconfig'.pylsp.setup{on_attach=on_attach}
 require'lspconfig'.bashls.setup{on_attach=on_attach}
@@ -635,3 +644,6 @@ nnoremap <leader>h :ClangdSwitchSourceHeader<CR>
 
 " spectre
 nnoremap <leader>S :lua require('spectre').open()<CR>
+
+"vimtext config
+let g:vimtex_text_obj_linewise_operators=0
