@@ -317,18 +317,14 @@ require('formatter').setup({
         -- luaformat
         lua = {
             -- clang-format
-            function()
-                return {
-                    exe = "/home/x2028200@ratpsmart.local/.luarocks/lib/luarocks/rocks-5.3/luaformatter/scm-1/bin/lua-format ",
-                    stdin = true
-                }
-            end
-        }
+            function() return {exe = "lua-format ", stdin = true} end
+        },
+        rust = {function() return {exe = "rustfmt", stdin = true} end}
     }
 })
 vim.cmd [[augroup FormatAutogroup
   autocmd!
-  autocmd BufWritePost *.cpp,*.hpp,*.h,*.lua FormatWrite
+  autocmd BufWritePost *.cpp,*.hpp,*.h FormatWrite
 augroup END]]
 
 -- luaeval()
@@ -474,7 +470,13 @@ require'lspconfig'.bashls.setup {
     on_attach = on_attach,
     capabilities = capabilities
 }
+require'lspconfig'.rust_analyzer.setup {
+    on_attach = on_attach,
+    capabilities = capabilities
+}
 local cmp_autopairs = require('nvim-autopairs.completion.cmp')
 require"lsp_signature".setup()
 
 require("trouble").setup {}
+
+vim.diagnostic.config({severity_sort = true})
