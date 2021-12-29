@@ -1,7 +1,7 @@
 #installation avec stow :
 stow alacritty -t ~
 stow bash -t ~
-stow vim -t 
+stow vim -t ~
 stow tmux -t ~
 
 

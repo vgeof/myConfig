@@ -509,8 +509,6 @@ vim.api.nvim_set_keymap("i", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true})
 vim.api.nvim_set_keymap("s", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true})
 
 
-local saga = require 'lspsaga'
-saga.init_lsp_saga()
 
 
 --local actions = require('telescope.actions')
@@ -542,6 +540,8 @@ EOF
 "nnoremap <leader>b <cmd>lua require('telescope.builtin').buffers()<cr>
 
 
+local saga = require 'lspsaga'
+saga.init_lsp_saga()
 nnoremap <silent> <M-CR> <cmd>lua require('lspsaga.codeaction').code_action()<CR>
 vnoremap <silent> <M-CR> :<C-U>lua require('lspsaga.codeaction').range_code_action()<CR>
 nnoremap <silent> K <cmd>lua require('lspsaga.hover').render_hover_doc()<CR>
