@@ -6,6 +6,7 @@ end
 function nmap(shortcut, command) map('n', shortcut, command) end
 
 function imap(shortcut, command) map('i', shortcut, command) end
+function smap(shortcut, command) map('s', shortcut, command) end
 function tmap(shortcut, command) map('t', shortcut, command) end
 function vmap(shortcut, command) map('v', shortcut, command) end
 
@@ -91,13 +92,8 @@ nmap("<C-p>", "<cmd>lua require('telescope.builtin').find_files()<cr>")
 nmap("<F3>", "<cmd>lua require('telescope.builtin').live_grep()<cr>")
 nmap("<leader>b", "<cmd>lua require('telescope.builtin').buffers()<cr>")
 nmap("<F2>", "<cmd>lua require('telescope.builtin').grep_string()<cr>")
-nmap("<C-h>", "<C-w>h")
-nmap("<C-j>", "<C-w>j")
-nmap("<C-k>", "<C-w>k")
-nmap("<C-l>", "<C-w>l")
 
 require'nvim-treesitter.configs'.setup {
-    ensure_installed = "all", -- one of "all", "maintained" (parsers with maintainers), or a list of languages
     sync_install = false, -- install languages synchronously (only applied to `ensure_installed`)
     ignore_install = {}, -- List of parsers to ignore installing
     highlight = {
@@ -141,61 +137,6 @@ require("indent_blankline").setup {
     buftype_exclude = {'terminal'}
 
 }
-
--- require'compe'.setup {
---    enabled = true,
---    autocomplete = true,
---    debug = false,
---    min_length = 1,
---    preselect = 'enable',
---    throttle_time = 80,
---    source_timeout = 200,
---    incomplete_delay = 400,
---    max_abbr_width = 100,
---    max_kind_width = 100,
---    max_menu_width = 100,
---    documentation = true,
---
---    source = {path = true, nvim_lsp = true}
--- }
--- local t = function(str)
---    return vim.api.nvim_replace_termcodes(str, true, true, true)
--- end
---
--- local check_back_space = function()
---    local col = vim.fn.col('.') - 1
---    if col == 0 or vim.fn.getline('.'):sub(col, col):match('%s') then
---        return true
---    else
---        return false
---    end
--- end
---
----- Use (s-)tab to:
------ move to prev/next item in completion menuone
--- _G.tab_complete = function()
---    if vim.fn.pumvisible() == 1 then
---        return t "<C-n>"
---        -- elseif vim.fn.call("UltiSnips#CanExpandSnippet",{}) == 1 then
---        -- return vim.fn['UltiSnips#ExpandSnippet']()
---    elseif check_back_space() then
---        return t "<Tab>"
---    else
---        return vim.fn['compe#complete']()
---    end
--- end
--- _G.s_tab_complete = function()
---    if vim.fn.pumvisible() == 1 then
---        return t "<C-p>"
---    else
---        return t "<S-Tab>"
---    end
--- end
---
--- vim.api.nvim_set_keymap("i", "<Tab>", "v:lua.tab_complete()", {expr = true})
--- vim.api.nvim_set_keymap("s", "<Tab>", "v:lua.tab_complete()", {expr = true})
--- vim.api.nvim_set_keymap("i", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true})
--- vim.api.nvim_set_keymap("s", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true})
 
 -- restore cursor position
 vim.cmd(
@@ -249,18 +190,6 @@ local on_attach = function(client, bufnr)
     buf_set_keymap('n', '<space>f', '<cmd>lua vim.lsp.buf.formatting()<CR>',
                    opts)
 
-    --  if client.resolved_capabilities.document_highlight then
-    --    vim.api.nvim_exec([[
-    --      hi LspReferenceRead cterm=bold ctermbg=black
-    --      hi LspReferenceText  cterm=bold ctermbg=black
-    --      hi LspReferenceWrite cterm=bold ctermbg=black
-    --      augroup lsp_document_highlight
-    --        autocmd! * <buffer>
-    --        autocmd CursorHold <buffer> lua vim.lsp.buf.document_highlight()
-    --        autocmd CursorMoved <buffer> lua vim.lsp.buf.clear_references()
-    --      augroup END
-    --    ]], false)
-    --  end
 end
 
 local saga = require 'lspsaga'
@@ -319,7 +248,11 @@ require('formatter').setup({
         },
         -- luaformat
         lua = {function() return {exe = "lua-format ", stdin = true} end},
-        rust = {function() return {exe = "rustfmt", stdin = true} end}
+        rust = {function() return {exe = "rustfmt", stdin = true} end},
+        typescript = {require('formatter.filetypes.typescript').prettier},
+        html = {require('formatter.filetypes.html').prettier},
+        css = {require('formatter.filetypes.css').prettier}
+
     }
 })
 vim.cmd [[augroup FormatAutogroup
@@ -378,7 +311,7 @@ local feedkey = function(key, mode)
                           mode, true)
 end
 
-vim.cmd([[set completeopt=menu,menuone,noselect]])
+vim.cmd([[set completeopt=menu,menuone,noinsert]])
 local cmp = require 'cmp'
 
 local ELLIPSIS_CHAR = '…'
@@ -386,10 +319,7 @@ local MAX_LABEL_WIDTH = 80
 local MIN_LABEL_WIDTH = 3
 
 cmp.setup({
-    -- view = {
-    --    entries = "native" -- can be "custom", "wildmenu" or "native"
-    -- },
-    completion = {keywork_length = 1},
+    completion = {keywork_length = 1, completeopt = 'menu,menuone,noinsert'},
     sorting = {
         comparators = {
             function(entry1, entry2)
@@ -411,47 +341,40 @@ cmp.setup({
         }
     },
     snippet = {
-        -- REQUIRED - you must specify a snippet engine
-        expand = function(args)
-            vim.fn["vsnip#anonymous"](args.body) -- For `vsnip` users.
-        end
+        expand = function(args) require('luasnip').lsp_expand(args.body) end
     },
-    mapping = {
-        ["<Tab>"] = cmp.mapping(function(fallback)
+    mapping = cmp.mapping.preset.insert({
+        ["<C-j>"] = cmp.mapping(function(fallback)
             if cmp.visible() then
-                cmp.select_next_item()
-                print("1")
-            elseif vim.fn["vsnip#available"](1) == 1 then
-                feedkey("<Plug>(vsnip-expand-or-jump)", "")
-                print("2")
+                cmp.select_next_item({behavior = cmp.SelectBehavior.Select})
             elseif has_words_before() then
                 cmp.complete()
                 print("3")
             else
-                fallback() -- The fallback function sends a already mapped key. In this case, it's probably `<Tab>`.
+                fallback()
             end
         end, {"i", "s"}),
-
-        ["<S-Tab>"] = cmp.mapping(function()
+        ["<C-k>"] = cmp.mapping(function()
             if cmp.visible() then
-                cmp.select_prev_item()
-            elseif vim.fn["vsnip#jumpable"](-1) == 1 then
-                feedkey("<Plug>(vsnip-jump-prev)", "")
+                cmp.select_prev_item({behavior = cmp.SelectBehavior.Select})
             end
         end, {"i", "s"}),
-        ['<C-b>'] = cmp.mapping(cmp.mapping.scroll_docs(-4), {'i', 'c'}),
-        ['<C-f>'] = cmp.mapping(cmp.mapping.scroll_docs(4), {'i', 'c'}),
-        ['<C-Space>'] = cmp.mapping(cmp.mapping.complete(), {'i', 'c'}),
-        ['<C-y>'] = cmp.config.disable, -- Specify `cmp.config.disable` if you want to remove the default `<C-y>` mapping.
-        ['<C-e>'] = cmp.mapping({
+        ["<C-b>"] = cmp.mapping(cmp.mapping.scroll_docs(-4), {'i', 'c'}),
+        ["<C-f>"] = cmp.mapping(cmp.mapping.scroll_docs(4), {'i', 'c'}),
+        ["<C-Space>"] = cmp.mapping(cmp.mapping.complete(), {'i', 'c'}),
+        ["<C-y>"] = cmp.config.disable, -- Specify `cmp.config.disable` if you want to remove the default `<C-y>` mapping.
+        ["<Tab>"] = cmp.mapping.confirm {
+            behavior = cmp.ConfirmBehavior.Insert
+            -- select = true,
+        },
+        ["<C-e>"] = cmp.mapping({
             i = cmp.mapping.abort(),
             c = cmp.mapping.close()
         })
-        -- ['<CR>'] = cmp.mapping.confirm({select = true})
-    },
+    }),
     sources = cmp.config.sources({
-        {name = 'nvim_lsp'}, {name = 'vsnip'},
-        {name = 'nvim_lsp_signature_help'}, {name = 'buffer'}, {name = 'path'}
+        {name = 'nvim_lsp'}, {name = 'luasnip'},
+        {name = 'nvim_lsp_signature_help'}, {name = 'path'}, {name = 'buffer'}
     }),
     formatting = {
         format = function(entry, vim_item)
@@ -469,6 +392,12 @@ cmp.setup({
         end
     }
 })
+
+vim.cmd(
+    [[imap <silent><expr> <Tab> luasnip#expand_or_jumpable() ? '<Plug>luasnip-expand-or-jump' : '<Tab>' ]])
+vim.cmd([[inoremap <silent> <S-Tab> <cmd>lua require'luasnip'.jump(-1)<Cr>]])
+
+require("luasnip.loaders.from_vscode").lazy_load()
 
 -- Use buffer source for `/` (if you enabled `native_menu`, this won't work anymore).
 -- cmp.setup.cmdline('/', {sources = {{name = 'buffer'}}})
@@ -496,17 +425,36 @@ require'lspconfig'.pylsp.setup {
     on_attach = on_attach,
     capabilities = capabilities
 }
+require'lspconfig'.angularls.setup {
+    on_attach = on_attach,
+    capabilities = capabilities
+}
+require'lspconfig'.tsserver.setup {
+    on_attach = on_attach,
+    capabilities = capabilities
+}
+require'lspconfig'.gopls.setup {
+    on_attach = on_attach,
+    capabilities = capabilities
+}
 require'lspconfig'.bashls.setup {
     on_attach = on_attach,
     capabilities = capabilities
 }
 require'lspconfig'.rust_analyzer.setup {
     on_attach = on_attach,
-    capabilities = capabilities
+    cmd = {"rust-analyzer"},
+    capabilities = capabilities,
+    settings = {
+        ["rust-analyzer"] = {
+            procMacro = {enable = true}
+            -- completion = {postfix = {enable = false}} -- disble postfix because they are always ranked first
+        }
+    }
 }
 local cmp_autopairs = require('nvim-autopairs.completion.cmp')
 -- require"lsp_signature".setup()
 
 require("trouble").setup {}
-
+-- vim.lsp.set_log_level("debug")
 vim.diagnostic.config({severity_sort = true})

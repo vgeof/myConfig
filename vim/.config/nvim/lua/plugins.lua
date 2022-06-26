@@ -40,11 +40,13 @@ return require('packer').startup(function()
     use {'p00f/nvim-ts-rainbow'}
     use {'nvim-treesitter/nvim-treesitter-textobjects'}
     use {'kassio/neoterm'}
+    use {'L3MON4D3/LuaSnip'}
+    use {'rafamadriz/friendly-snippets'}
     use {
         'hrsh7th/nvim-cmp',
         requires = {
             'hrsh7th/cmp-nvim-lsp', 'hrsh7th/cmp-buffer', 'hrsh7th/cmp-path',
-            'hrsh7th/cmp-vsnip', 'hrsh7th/vim-vsnip','hrsh7th/cmp-nvim-lsp-signature-help'
+            'saadparwaiz1/cmp_luasnip','hrsh7th/cmp-nvim-lsp-signature-help'
         }
     }
     use {'tami5/lspsaga.nvim'}
