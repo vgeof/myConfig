@@ -416,7 +416,7 @@ require'lspconfig'.clangd.setup {
     on_attach = on_attach,
     cmd = {
         "clangd", "--clang-tidy", "--background-index",
-        "--completion-style=bundled"
+        "--completion-style=detailed"
     },
     capabilities = capabilities
 }
