@@ -52,7 +52,19 @@ vim.o.scl = "yes"
 vim.o.showmode = false
 
 require('lualine').setup({
+    options = {globalstatus = false},
     sections = {
+        lualine_c = {
+            {
+                'filename',
+                file_status = true, -- displays file status (readonly status, modified status)
+                path = 1, -- 0 = just filename, 1 = relative path, 2 = absolute path
+                shorting_target = 40 -- Shortens path to leave 40 space in the window
+                -- for other components. Terrible name any suggestions?
+            }
+        }
+    },
+    inactive_sections = {
         lualine_c = {
             {
                 'filename',
@@ -74,7 +86,6 @@ vim.cmd([[autocmd ColorScheme * highlight Normal guibg=None ctermbg=None]])
 vim.cmd([[colorscheme gruvbox]])
 
 require('nvim-autopairs').setup {}
-require'nvim-tree'.setup {}
 require('gitsigns').setup {}
 nmap("<C-p>", "<cmd>lua require('telescope.builtin').find_files()<cr>")
 nmap("<F3>", "<cmd>lua require('telescope.builtin').live_grep()<cr>")
@@ -86,7 +97,7 @@ nmap("<C-k>", "<C-w>k")
 nmap("<C-l>", "<C-w>l")
 
 require'nvim-treesitter.configs'.setup {
-    ensure_installed = "maintained", -- one of "all", "maintained" (parsers with maintainers), or a list of languages
+    ensure_installed = "all", -- one of "all", "maintained" (parsers with maintainers), or a list of languages
     sync_install = false, -- install languages synchronously (only applied to `ensure_installed`)
     ignore_install = {}, -- List of parsers to ignore installing
     highlight = {
@@ -117,15 +128,7 @@ require'nvim-treesitter.configs'.setup {
                 ["af"] = "@function.outer",
                 ["if"] = "@function.inner",
                 ["ac"] = "@class.outer",
-                ["ic"] = "@class.inner",
-
-                -- Or you can define your own textobjects like this
-                ["iF"] = {
-                    python = "(function_definition) @function",
-                    cpp = "(function_definition) @function",
-                    c = "(function_definition) @function",
-                    java = "(method_declaration) @function"
-                }
+                ["ic"] = "@class.inner"
             }
         }
     }
@@ -237,8 +240,8 @@ local on_attach = function(client, bufnr)
     buf_set_keymap('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<CR>', opts)
     buf_set_keymap('n', '<space>D',
                    '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
-    buf_set_keymap('n', '<F10>',
-                   '<cmd>TroubleToggle lsp_document_diagnostics<cr>', opts)
+    buf_set_keymap('n', '<F10>', '<cmd>TroubleToggle document_diagnostics<cr>',
+                   opts)
     buf_set_keymap('n', '<F4>', '<cmd>lua vim.lsp.buf.incoming_calls()<CR>',
                    opts)
     buf_set_keymap('n', '<F7>', '<cmd>lua vim.lsp.buf.outgoing_calls()<CR>',
@@ -265,7 +268,7 @@ saga.init_lsp_saga()
 nmap("<M-CR>", "<cmd>lua require('lspsaga.codeaction').code_action()<CR>")
 vmap("<M-CR>", ":<C-U>lua require('lspsaga.codeaction').range_code_action()<CR>")
 nmap("K", "<cmd>lua require('lspsaga.hover').render_hover_doc()<CR>")
-nmap("gs", "<cmd>lua require('lspsaga.signaturehelp').signature_help()<CR>")
+-- nmap("gs", "<cmd>lua require('lspsaga.signaturehelp').signature_help()<CR>")
 nmap("<space>rn", "<cmd>lua require('lspsaga.rename').rename()<CR>")
 nmap("<leader>cd",
      "<cmd>lua require'lspsaga.diagnostic'.show_line_diagnostics()<CR>")
@@ -307,7 +310,7 @@ require('formatter').setup({
             -- clang-format
             function()
                 return {
-                    exe = "clang-format-6.0",
+                    exe = "clang-format-11",
                     args = {"--assume-filename", vim.api.nvim_buf_get_name(0)},
                     stdin = true,
                     cwd = vim.fn.expand('%:p:h') -- Run clang-format in cwd of the file.
@@ -315,10 +318,7 @@ require('formatter').setup({
             end
         },
         -- luaformat
-        lua = {
-            -- clang-format
-            function() return {exe = "lua-format ", stdin = true} end
-        },
+        lua = {function() return {exe = "lua-format ", stdin = true} end},
         rust = {function() return {exe = "rustfmt", stdin = true} end}
     }
 })
@@ -332,13 +332,17 @@ vim.cmd([[
 command BCommits :lua require'telescope.builtin'.git_bcommits{} 
 ]])
 
-require("telescope").setup {
+local telescope = require("telescope")
+telescope.setup {
     defaults = {
         mappings = {
             i = {
                 ["<C-j>"] = "move_selection_next",
                 ["<C-k>"] = "move_selection_previous"
+                -- ["<C-t>"] = "trouble.open_with_trouble"
             }
+
+            -- n = {["<c-t>"] = trouble.open_with_trouble}
         }
     },
     pickers = {
@@ -377,7 +381,14 @@ end
 vim.cmd([[set completeopt=menu,menuone,noselect]])
 local cmp = require 'cmp'
 
+local ELLIPSIS_CHAR = '…'
+local MAX_LABEL_WIDTH = 80
+local MIN_LABEL_WIDTH = 3
+
 cmp.setup({
+    -- view = {
+    --    entries = "native" -- can be "custom", "wildmenu" or "native"
+    -- },
     completion = {keywork_length = 1},
     sorting = {
         comparators = {
@@ -409,10 +420,13 @@ cmp.setup({
         ["<Tab>"] = cmp.mapping(function(fallback)
             if cmp.visible() then
                 cmp.select_next_item()
+                print("1")
             elseif vim.fn["vsnip#available"](1) == 1 then
                 feedkey("<Plug>(vsnip-expand-or-jump)", "")
+                print("2")
             elseif has_words_before() then
                 cmp.complete()
+                print("3")
             else
                 fallback() -- The fallback function sends a already mapped key. In this case, it's probably `<Tab>`.
             end
@@ -436,8 +450,24 @@ cmp.setup({
         -- ['<CR>'] = cmp.mapping.confirm({select = true})
     },
     sources = cmp.config.sources({
-        {name = 'nvim_lsp'}, {name = 'vsnip'} -- For vsnip users.
-    }, {{name = 'buffer'}})
+        {name = 'nvim_lsp'}, {name = 'vsnip'},
+        {name = 'nvim_lsp_signature_help'}, {name = 'buffer'}, {name = 'path'}
+    }),
+    formatting = {
+        format = function(entry, vim_item)
+            local label = vim_item.abbr
+            local truncated_label = vim.fn
+                                        .strcharpart(label, 0, MAX_LABEL_WIDTH)
+            if truncated_label ~= label then
+                vim_item.abbr = truncated_label .. ELLIPSIS_CHAR
+            elseif string.len(label) < MIN_LABEL_WIDTH then
+                local padding = string.rep(' ',
+                                           MIN_LABEL_WIDTH - string.len(label))
+                vim_item.abbr = label .. padding
+            end
+            return vim_item
+        end
+    }
 })
 
 -- Use buffer source for `/` (if you enabled `native_menu`, this won't work anymore).
@@ -457,7 +487,7 @@ require'lspconfig'.clangd.setup {
     on_attach = on_attach,
     cmd = {
         "clangd", "--clang-tidy", "--background-index",
-        "--suggest-missing-includes", "--completion-style=detailed"
+        "--completion-style=bundled"
     },
     capabilities = capabilities
 }
@@ -475,7 +505,7 @@ require'lspconfig'.rust_analyzer.setup {
     capabilities = capabilities
 }
 local cmp_autopairs = require('nvim-autopairs.completion.cmp')
-require"lsp_signature".setup()
+-- require"lsp_signature".setup()
 
 require("trouble").setup {}
 

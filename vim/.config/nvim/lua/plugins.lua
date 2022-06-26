@@ -3,10 +3,17 @@ return require('packer').startup(function()
     use 'wbthomason/packer.nvim'
 
     use 'nvim-lualine/lualine.nvim'
+    use 'cstrahan/vim-capnp'
 
     use {
         "folke/which-key.nvim",
-        config = function() require("which-key").setup {} end
+        config = function()
+            require("which-key").setup {
+                -- your configuration comes here
+                -- or leave it empty to use the default settings
+                -- refer to the configuration section below
+            }
+        end
     }
     use {"ellisonleao/gruvbox.nvim", requires = {"rktjmp/lush.nvim"}}
 
@@ -15,7 +22,9 @@ return require('packer').startup(function()
 
     use {
         'kyazdani42/nvim-tree.lua',
-        requires = 'kyazdani42/nvim-web-devicons',
+        requires = {
+            'kyazdani42/nvim-web-devicons' -- optional, for file icon
+        },
         config = function() require'nvim-tree'.setup {} end
     }
     use 'tpope/vim-fugitive'
@@ -35,7 +44,7 @@ return require('packer').startup(function()
         'hrsh7th/nvim-cmp',
         requires = {
             'hrsh7th/cmp-nvim-lsp', 'hrsh7th/cmp-buffer', 'hrsh7th/cmp-path',
-            'hrsh7th/cmp-vsnip', 'hrsh7th/vim-vsnip'
+            'hrsh7th/cmp-vsnip', 'hrsh7th/vim-vsnip','hrsh7th/cmp-nvim-lsp-signature-help'
         }
     }
     use {'tami5/lspsaga.nvim'}
