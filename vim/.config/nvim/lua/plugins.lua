@@ -15,7 +15,7 @@ return require('packer').startup(function()
             }
         end
     }
-    use {"ellisonleao/gruvbox.nvim", requires = {"rktjmp/lush.nvim"}}
+    use {"ellisonleao/gruvbox.nvim"}
 
     -- TODO : snippet
     use "windwp/nvim-autopairs"
@@ -40,13 +40,15 @@ return require('packer').startup(function()
     use {'p00f/nvim-ts-rainbow'}
     use {'nvim-treesitter/nvim-treesitter-textobjects'}
     use {'kassio/neoterm'}
+    use {'NoahTheDuke/vim-just'}
     use {'L3MON4D3/LuaSnip'}
     use {'rafamadriz/friendly-snippets'}
     use {
         'hrsh7th/nvim-cmp',
         requires = {
             'hrsh7th/cmp-nvim-lsp', 'hrsh7th/cmp-buffer', 'hrsh7th/cmp-path',
-            'saadparwaiz1/cmp_luasnip','hrsh7th/cmp-nvim-lsp-signature-help'
+            'saadparwaiz1/cmp_luasnip', 'hrsh7th/cmp-nvim-lsp-signature-help',
+            'hrsh7th/cmp-cmdline'
         }
     }
     use {'tami5/lspsaga.nvim'}
@@ -54,8 +56,10 @@ return require('packer').startup(function()
     use "lukas-reineke/indent-blankline.nvim"
     use {"mhartington/formatter.nvim"}
     use {'nvim-telescope/telescope-fzf-native.nvim', run = 'make'}
-    use {'ray-x/lsp_signature.nvim'}
     use {'folke/trouble.nvim', requires = {'nvim-web-devicons'}}
     use {'sakhnik/nvim-gdb'}
+    use {'zchee/vim-flatbuffers'}
+    use {'martinda/Jenkinsfile-vim-syntax'}
+    use {'folke/neodev.nvim'}
 
 end)

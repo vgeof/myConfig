@@ -6,12 +6,15 @@ end
 function nmap(shortcut, command) map('n', shortcut, command) end
 
 function imap(shortcut, command) map('i', shortcut, command) end
+function cmap(shortcut, command) map('c', shortcut, command) end
 function smap(shortcut, command) map('s', shortcut, command) end
 function tmap(shortcut, command) map('t', shortcut, command) end
 function vmap(shortcut, command) map('v', shortcut, command) end
 
 nmap("<F6>", ":NvimTreeToggle<CR>")
 nmap("<F5>", ":NvimTreeFindFile<CR>")
+cmap("<C-j>", "<C-N>")
+cmap("<C-k>", "<C-P>")
 
 require('plugins')
 
@@ -32,7 +35,7 @@ vim.o.so = 15
 vim.o.ignorecase = true
 vim.o.smartcase = true
 -- better tab completion in command mode
-vim.o.wildmode = "longest:full,full"
+vim.o.wildmode = "longest:full"
 vim.o.wildignorecase = true
 ----vim.o.diffopt:append("vertical")
 vim.cmd([[set diffopt+=vertical]])
@@ -86,7 +89,6 @@ vim.g.gruvbox_vert_split = "bg2"
 vim.cmd([[autocmd ColorScheme * highlight Normal guibg=None ctermbg=None]])
 vim.cmd([[colorscheme gruvbox]])
 
-require('nvim-autopairs').setup {}
 require('gitsigns').setup {}
 nmap("<C-p>", "<cmd>lua require('telescope.builtin').find_files()<cr>")
 nmap("<F3>", "<cmd>lua require('telescope.builtin').live_grep()<cr>")
@@ -102,7 +104,15 @@ require'nvim-treesitter.configs'.setup {
         -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
         -- Using this option may slow down your editor, and you may see some duplicate highlights.
         -- Instead of true it can also be a list of languages
-        additional_vim_regex_highlighting = false
+        additional_vim_regex_highlighting = false,
+        is_supported = function()
+            if vim.fn.strwidth(vim.fn.getline('.')) > 1000 or
+                vim.fn.getfsize(vim.fn.expand('%')) > 2048 * 1024 then
+                return false
+            else
+                return true
+            end
+        end
     },
     rainbow = {
         enable = true,
@@ -166,7 +176,6 @@ vim.g.neoterm_autoscroll = true
 vim.g.neoterm_shell = "fish"
 vim.g.neoterm_repl_enable_ipython_paste_magic = true
 
-local nvim_lsp = require('lspconfig')
 local on_attach = function(client, bufnr)
     local function buf_set_keymap(...)
         vim.api.nvim_buf_set_keymap(bufnr, ...)
@@ -249,21 +258,25 @@ require('formatter').setup({
         -- luaformat
         lua = {function() return {exe = "lua-format ", stdin = true} end},
         rust = {function() return {exe = "rustfmt", stdin = true} end},
+        python = {require('formatter.filetypes.python').black},
+        json = {require('formatter.filetypes.json').jsbeautify},
         typescript = {require('formatter.filetypes.typescript').prettier},
         html = {require('formatter.filetypes.html').prettier},
         css = {require('formatter.filetypes.css').prettier}
 
     }
 })
-vim.cmd [[augroup FormatAutogroup
-  autocmd!
-  autocmd BufWritePost *.cpp,*.hpp,*.h FormatWrite
-augroup END]]
-
+--
 -- luaeval()
 vim.cmd([[
 command BCommits :lua require'telescope.builtin'.git_bcommits{} 
 ]])
+
+local telescope_actions = require("telescope.actions")
+local function send_to_quickfix(promtbufnr)
+    telescope_actions.smart_send_to_qflist(promtbufnr)
+    vim.cmd([[bel copen]])
+end
 
 local telescope = require("telescope")
 telescope.setup {
@@ -271,18 +284,24 @@ telescope.setup {
         mappings = {
             i = {
                 ["<C-j>"] = "move_selection_next",
-                ["<C-k>"] = "move_selection_previous"
+                ["<C-k>"] = "move_selection_previous",
+                ["<C-q>"] = send_to_quickfix
                 -- ["<C-t>"] = "trouble.open_with_trouble"
-            }
-
+            },
             -- n = {["<c-t>"] = trouble.open_with_trouble}
-        }
+            n = {["<C-q>"] = send_to_quickfix}
+        },
+        preview = {filesize_limit = 1}
     },
     pickers = {
         buffers = {
             ignore_current_buffer = true,
             sort_mru = true,
             sort_lastused = true
+        },
+        find_files = {
+            -- `hidden = true` will still show the inside of `.git/` as it's not `.gitignore`d.
+            find_command = {"rg", "--files", "--hidden", "--glob", "!**/.git/*"}
         }
     },
     extensions = {
@@ -297,6 +316,7 @@ telescope.setup {
 }
 require('telescope').load_extension('fzf')
 require('nvim-autopairs').setup({fast_wrap = {}})
+local cmp_autopairs = require('nvim-autopairs.completion.cmp')
 
 local has_words_before = function()
     local line, col = unpack(vim.api.nvim_win_get_cursor(0))
@@ -317,6 +337,11 @@ local cmp = require 'cmp'
 local ELLIPSIS_CHAR = '…'
 local MAX_LABEL_WIDTH = 80
 local MIN_LABEL_WIDTH = 3
+
+cmp.event:on(
+  'confirm_done',
+  cmp_autopairs.on_confirm_done()
+)
 
 cmp.setup({
     completion = {keywork_length = 1, completeopt = 'menu,menuone,noinsert'},
@@ -363,10 +388,10 @@ cmp.setup({
         ["<C-f>"] = cmp.mapping(cmp.mapping.scroll_docs(4), {'i', 'c'}),
         ["<C-Space>"] = cmp.mapping(cmp.mapping.complete(), {'i', 'c'}),
         ["<C-y>"] = cmp.config.disable, -- Specify `cmp.config.disable` if you want to remove the default `<C-y>` mapping.
-        ["<Tab>"] = cmp.mapping.confirm {
+        ["<Tab>"] = cmp.mapping(cmp.mapping.confirm {
             behavior = cmp.ConfirmBehavior.Insert
             -- select = true,
-        },
+        }, {'i'}),
         ["<C-e>"] = cmp.mapping({
             i = cmp.mapping.abort(),
             c = cmp.mapping.close()
@@ -397,21 +422,13 @@ vim.cmd(
     [[imap <silent><expr> <Tab> luasnip#expand_or_jumpable() ? '<Plug>luasnip-expand-or-jump' : '<Tab>' ]])
 vim.cmd([[inoremap <silent> <S-Tab> <cmd>lua require'luasnip'.jump(-1)<Cr>]])
 
+-- before lspconfig
+require("neodev").setup {}
+
 require("luasnip.loaders.from_vscode").lazy_load()
 
--- Use buffer source for `/` (if you enabled `native_menu`, this won't work anymore).
--- cmp.setup.cmdline('/', {sources = {{name = 'buffer'}}})
---
----- Use cmdline & path source for ':' (if you enabled `native_menu`, this won't work anymore).
--- cmp.setup.cmdline(':', {
---    sources = cmp.config.sources({{name = 'path', keyword_length = 1}},
---                                 {{name = 'cmdline', keyword_length = 2}})
--- })
---
 -- Setup lspconfig.
-local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp
-                                                                     .protocol
-                                                                     .make_client_capabilities())
+local capabilities = require('cmp_nvim_lsp').default_capabilities()
 require'lspconfig'.clangd.setup {
     on_attach = on_attach,
     cmd = {
@@ -437,6 +454,10 @@ require'lspconfig'.gopls.setup {
     on_attach = on_attach,
     capabilities = capabilities
 }
+require'lspconfig'.lua_ls.setup {
+    on_attach = on_attach,
+    capabilities = capabilities
+}
 require'lspconfig'.bashls.setup {
     on_attach = on_attach,
     capabilities = capabilities
@@ -452,8 +473,8 @@ require'lspconfig'.rust_analyzer.setup {
         }
     }
 }
-local cmp_autopairs = require('nvim-autopairs.completion.cmp')
--- require"lsp_signature".setup()
+
+require("nvim-tree").setup({filters = {dotfiles = false}})
 
 require("trouble").setup {}
 -- vim.lsp.set_log_level("debug")
