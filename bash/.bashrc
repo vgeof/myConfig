@@ -89,6 +89,7 @@ if ! shopt -oq posix; then
     fi
 fi
 
+[ -f "/usr/share/doc/fzf/examples/key-bindings.bash" ] && source /usr/share/doc/fzf/examples/key-bindings.bash
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
 #export FZF_DEFAULT_COMMAND='fd --type f'
 export FZF_DEFAULT_COMMAND='rg --files --no-messages --hidden --follow --glob "!.git/*" --glob "!.hg/*" --glob "!.clangd/*"'
@@ -116,3 +117,14 @@ export LESS_TERMCAP_ue=$'\E[0m'        # reset underline
 #if [[ $(ps --no-header --pid=$PPID --format=cmd) != "fish" ]]; then
 #    exec fish
 #fi
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+. "$HOME/.cargo/env"
+
+
+export ANDROID_HOME=${HOME}/Android/Sdk
+export PATH="${ANDROID_HOME}/tools:${PATH}"
+export PATH="${ANDROID_HOME}/emulator:${PATH}"
+export PATH="${ANDROID_HOME}/platform-tools:${PATH}"

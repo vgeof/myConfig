@@ -16,6 +16,7 @@ nmap("<F5>", ":NvimTreeFindFile<CR>")
 cmap("<C-j>", "<C-N>")
 cmap("<C-k>", "<C-P>")
 
+vim.lsp.set_log_level("debug")
 require('plugins')
 
 vim.o.smartindent = true
@@ -91,8 +92,10 @@ vim.cmd([[colorscheme gruvbox]])
 
 require('gitsigns').setup {}
 nmap("<C-p>", "<cmd>lua require('telescope.builtin').find_files()<cr>")
+nmap("<space>f", "<cmd>lua require('telescope.builtin').find_files()<cr>")
 nmap("<F3>", "<cmd>lua require('telescope.builtin').live_grep()<cr>")
 nmap("<leader>b", "<cmd>lua require('telescope.builtin').buffers()<cr>")
+nmap("<space>b", "<cmd>lua require('telescope.builtin').buffers()<cr>")
 nmap("<F2>", "<cmd>lua require('telescope.builtin').grep_string()<cr>")
 
 require'nvim-treesitter.configs'.setup {
@@ -140,7 +143,7 @@ require'nvim-treesitter.configs'.setup {
     }
 }
 
-require("indent_blankline").setup {
+require("ibl").setup {
 
     char_list = {'|', '¦', '┆', '┊'},
     char_highlight_list = {'NonText'},
@@ -185,8 +188,8 @@ local on_attach = function(client, bufnr)
     end
 
     local opts = {noremap = true, silent = true}
-    buf_set_keymap('n', 'gd', '<Cmd>lua vim.lsp.buf.declaration()<CR>', opts)
-    buf_set_keymap('n', '<C-]>', '<Cmd>lua vim.lsp.buf.definition()<CR>', opts)
+    -- buf_set_keymap('n', 'gd', '<Cmd>lua vim.lsp.buf.declaration()<CR>', opts)
+    buf_set_keymap('n', 'gd', '<Cmd>lua vim.lsp.buf.definition()<CR>', opts)
     buf_set_keymap('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<CR>', opts)
     buf_set_keymap('n', '<space>D',
                    '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
@@ -196,15 +199,13 @@ local on_attach = function(client, bufnr)
                    opts)
     buf_set_keymap('n', '<F7>', '<cmd>lua vim.lsp.buf.outgoing_calls()<CR>',
                    opts)
-    buf_set_keymap('n', '<space>f', '<cmd>lua vim.lsp.buf.formatting()<CR>',
-                   opts)
 
 end
 
-local saga = require 'lspsaga'
-saga.init_lsp_saga()
 nmap("<M-CR>", "<cmd>lua require('lspsaga.codeaction').code_action()<CR>")
+nmap("<space>a", "<cmd>lua require('lspsaga.codeaction').code_action()<CR>")
 vmap("<M-CR>", ":<C-U>lua require('lspsaga.codeaction').range_code_action()<CR>")
+nmap("<space>k", "<cmd>lua require('lspsaga.hover').render_hover_doc()<CR>")
 nmap("K", "<cmd>lua require('lspsaga.hover').render_hover_doc()<CR>")
 -- nmap("gs", "<cmd>lua require('lspsaga.signaturehelp').signature_help()<CR>")
 nmap("<space>rn", "<cmd>lua require('lspsaga.rename').rename()<CR>")
@@ -291,7 +292,7 @@ telescope.setup {
             -- n = {["<c-t>"] = trouble.open_with_trouble}
             n = {["<C-q>"] = send_to_quickfix}
         },
-        preview = {filesize_limit = 1}
+        preview = {filesize_limit = 1, timeout = 250}
     },
     pickers = {
         buffers = {
@@ -338,10 +339,7 @@ local ELLIPSIS_CHAR = '…'
 local MAX_LABEL_WIDTH = 80
 local MIN_LABEL_WIDTH = 3
 
-cmp.event:on(
-  'confirm_done',
-  cmp_autopairs.on_confirm_done()
-)
+cmp.event:on('confirm_done', cmp_autopairs.on_confirm_done())
 
 cmp.setup({
     completion = {keywork_length = 1, completeopt = 'menu,menuone,noinsert'},
@@ -468,8 +466,9 @@ require'lspconfig'.rust_analyzer.setup {
     capabilities = capabilities,
     settings = {
         ["rust-analyzer"] = {
+            imports = {granularity = {group = "module"}, prefix = "self"},
+            cargo = {buildScripts = {enable = false}},
             procMacro = {enable = true}
-            -- completion = {postfix = {enable = false}} -- disble postfix because they are always ranked first
         }
     }
 }

@@ -15,3 +15,4 @@ skip-levels = 1
   "search_selection",
   "global_search",
 ]
+"A-f" = ":format"

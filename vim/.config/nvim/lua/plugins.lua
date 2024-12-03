@@ -51,7 +51,13 @@ return require('packer').startup(function()
             'hrsh7th/cmp-cmdline'
         }
     }
-    use {'tami5/lspsaga.nvim'}
+    use ({
+    'nvimdev/lspsaga.nvim',
+    after = 'nvim-lspconfig',
+    config = function()
+        require('lspsaga').setup({})
+    end,
+})
     use {'windwp/nvim-spectre', requires = {'nvim-lua/plenary.nvim'}}
     use "lukas-reineke/indent-blankline.nvim"
     use {"mhartington/formatter.nvim"}
