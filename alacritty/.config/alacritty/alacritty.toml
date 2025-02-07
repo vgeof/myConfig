@@ -1,0 +1,50 @@
+[colors]
+draw_bold_text_with_bright_colors = false
+
+[colors.bright]
+black = "#928374"
+blue = "#83a5A8"
+cyan = "#8ec07c"
+green = "#9ec400"
+magenta = "#b77ee0"
+red = "#FB4934"
+white = "#EBDBB2"
+yellow = "#e7c547"
+
+[colors.normal]
+black = "#181818"
+blue = "#458598"
+cyan = "#689d6a"
+green = "#b9ca4a"
+magenta = "#c397d8"
+red = "#CC241D"
+white = "#A89984"
+yellow = "#d79721"
+
+[colors.primary]
+background = "#181818"
+foreground = "#EBDBB2"
+
+[font]
+size = 14.0
+
+[font.bold]
+family = "iosevka"
+
+[font.normal]
+family = "iosevka"
+style = "Light"
+
+[font.offset]
+x = 0
+y = 0
+
+[scrolling]
+history = 10000
+
+[shell]
+program = "/bin/fish"
+
+[window]
+decorations = "none"
+startup_mode = "Maximized"

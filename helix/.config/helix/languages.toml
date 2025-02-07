@@ -13,3 +13,5 @@ plugins.rope_autoimport.enabled = true
 
 [language-server.rust-analyzer]
 config = {rust-analyzer ={ cargo = { buildScripts = {enable = false} } }}
+[language-server.clangd]
+command = "clangd-16"
